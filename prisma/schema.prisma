@@ -7,39 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  idUser                               Int                    @id @default(autoincrement())
-  name                                 String?                @db.VarChar(255)
-  biography                            String?                @db.Text
-  role                                 String?                @db.VarChar(100)
-  gender                               String?                @db.VarChar(10)
-  birthday                             DateTime?              @db.Date
-  codeExpired                          String?                @db.VarChar(255)
-  codeId                               String?                @db.VarChar(255)
-  email                                String?                @unique(map: "email") @db.VarChar(255)
-  password                             String?                @db.VarChar(255)
-  Answer                               Answer[]
-  Cart                                 Cart[]
-  Coupon                               Coupon[]
-  Course                               Course[]
-  Enrollment                           Enrollment[]
-  Follow_Follow_idFollowerToUser       Follow[]               @relation("Follow_idFollowerToUser")
-  Follow_Follow_idFollowingToUser      Follow[]               @relation("Follow_idFollowingToUser")
-  Message_Message_idUserReceiverToUser Message[]              @relation("Message_idUserReceiverToUser")
-  Message_Message_idUserSenderToUser   Message[]              @relation("Message_idUserSenderToUser")
-  Note                                 Note[]
-  Notification                         Notification[]
-  NotificationReceiver                 NotificationReceiver[]
-  Payment                              Payment[]
-  Question                             Question[]
-  Report                               Report[]
-  Review                               Review[]
-  StudyRemind                          StudyRemind[]
-  UserCertificate                      UserCertificate[]
-  UserCoupon                           UserCoupon[]
-  Wishlist                             Wishlist[]
-}
-
 model Answer {
   idQuestion    Int
   idAnswer      Int
@@ -316,6 +283,39 @@ model StudyRemind {
 
   @@index([idCourse], map: "fk_StudyRemind_Course")
   @@index([idUser], map: "fk_StudyRemind_User")
+}
+
+model User {
+  idUser                               Int                    @id @default(autoincrement())
+  name                                 String?                @db.VarChar(255)
+  biography                            String?                @db.Text
+  role                                 String?                @db.VarChar(100)
+  gender                               String?                @db.VarChar(10)
+  birthday                             DateTime?              @db.Date
+  codeExpired                          String?                @db.VarChar(255)
+  codeId                               String?                @db.VarChar(255)
+  email                                String?                @unique(map: "email") @db.VarChar(255)
+  password                             String?                @db.VarChar(255)
+  Answer                               Answer[]
+  Cart                                 Cart[]
+  Coupon                               Coupon[]
+  Course                               Course[]
+  Enrollment                           Enrollment[]
+  Follow_Follow_idFollowerToUser       Follow[]               @relation("Follow_idFollowerToUser")
+  Follow_Follow_idFollowingToUser      Follow[]               @relation("Follow_idFollowingToUser")
+  Message_Message_idUserReceiverToUser Message[]              @relation("Message_idUserReceiverToUser")
+  Message_Message_idUserSenderToUser   Message[]              @relation("Message_idUserSenderToUser")
+  Note                                 Note[]
+  Notification                         Notification[]
+  NotificationReceiver                 NotificationReceiver[]
+  Payment                              Payment[]
+  Question                             Question[]
+  Report                               Report[]
+  Review                               Review[]
+  StudyRemind                          StudyRemind[]
+  UserCertificate                      UserCertificate[]
+  UserCoupon                           UserCoupon[]
+  Wishlist                             Wishlist[]
 }
 
 model UserCertificate {
