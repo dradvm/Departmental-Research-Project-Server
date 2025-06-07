@@ -19,28 +19,28 @@ export class CouponService {
 
     if (data.appliedAmount > data.quantity) {
       throw new BadRequestException(
-        `appliedAmount can not be more than quantity!`,
+        `appliedAmount can not be more than quantity!`
       );
     }
 
     if (data.appliedAmount < 0)
       throw new BadRequestException(
-        `appliedAmount should be greater than or equal to 0`,
+        `appliedAmount should be greater than or equal to 0`
       );
 
     if (data.quantity < 0)
       throw new BadRequestException(
-        `quantity should be greater than or equal to 0`,
+        `quantity should be greater than or equal to 0`
       );
 
     if (data.minRequire < 0)
       throw new BadRequestException(
-        `minRequire should be greater than or equal to 0`,
+        `minRequire should be greater than or equal to 0`
       );
 
     if (data.maxValueDiscount < 0)
       throw new BadRequestException(
-        `maxValueDiscount should be greater than or equal to 0`,
+        `maxValueDiscount should be greater than or equal to 0`
       );
 
     // Discount: 10%, 40%
@@ -63,8 +63,8 @@ export class CouponService {
     try {
       return await this.prisma.coupon.findUnique({
         where: {
-          idCoupon: id,
-        },
+          idCoupon: id
+        }
       });
     } catch (e) {
       throw new BadRequestException(`Get coupon with id ${id} failed: ${e}`);
@@ -93,9 +93,9 @@ export class CouponService {
       const checkData: CreateCouponDto = this.getCheckedData(data);
       return await this.prisma.coupon.update({
         where: {
-          idCoupon: id,
+          idCoupon: id
         },
-        data: checkData,
+        data: checkData
       });
     } catch (e) {
       throw new BadRequestException(`Update coupon with id ${id} failed: ${e}`);
@@ -106,8 +106,8 @@ export class CouponService {
     try {
       return await this.prisma.coupon.delete({
         where: {
-          idCoupon: id,
-        },
+          idCoupon: id
+        }
       });
     } catch (e) {
       throw new BadRequestException(`Delete coupon with id ${id} failed: ${e}`);

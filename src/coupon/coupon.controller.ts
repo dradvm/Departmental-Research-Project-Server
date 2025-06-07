@@ -6,7 +6,7 @@ import {
   NotFoundException,
   Param,
   Post,
-  Put,
+  Put
 } from '@nestjs/common';
 import { CouponService } from './coupon.service';
 import { Coupon } from 'generated/prisma';
@@ -14,7 +14,7 @@ import { CreateCouponDto } from './dto/create-coupon.dto';
 
 @Controller('coupon')
 export class CouponController {
-  constructor(private readonly couponService: CouponService) {}
+  constructor(private readonly couponService: CouponService) { }
 
   @Get('/:id')
   async getCoupon(@Param('id') id: string): Promise<Coupon | string> {
@@ -31,7 +31,7 @@ export class CouponController {
   @Post()
   async createCoupon(
     @Body()
-    body: CreateCouponDto,
+    body: CreateCouponDto
   ): Promise<Coupon> {
     const coupon: Coupon = await this.couponService.createCoupon(body);
     return coupon;
@@ -41,7 +41,7 @@ export class CouponController {
   async updateCoupon(
     @Param('id') id: string,
     @Body()
-    body: CreateCouponDto,
+    body: CreateCouponDto
   ): Promise<Coupon> {
     const coupon = await this.couponService.updateCoupon(parseInt(id), body);
     return coupon;
