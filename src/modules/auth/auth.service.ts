@@ -6,32 +6,29 @@ import { UserWithoutPassword } from '../user/user.interface';
 
 @Injectable()
 export class AuthService {
+  constructor(private readonly prismaService: PrismaService) {}
+  authenticate(request: AuthRequest): string {
+    console.log(request);
+    return 'Attempt from auth service';
+  }
 
-    constructor(
-        private readonly prismaService: PrismaService
-    ) {
-
+  async validateUser(
+    email: string,
+    password: string
+  ): Promise<UserWithoutPassword | null> {
+    const user = await this.prismaService.user.findUnique({
+      where: { email }
+    });
+    if (!user || !user.password) {
+      return null;
     }
-    authenticate(request: AuthRequest): string {
-        console.log(request);
-        return 'Attempt from auth service';
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return null;
     }
 
-    async validateUser(email: string, password: string): Promise<UserWithoutPassword | null> {
-        const user = await this.prismaService.user.findUnique({
-            where: { email },
-        })
-        if (!user || !user.password) {
-            return null;
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return null;
-        }
-
-        const { password: _, ...result } = user; // Exclude password from the result
-        return result;
-
-    }
+    const { password: _, ...result } = user; // Exclude password from the result
+    return result;
+  }
 }

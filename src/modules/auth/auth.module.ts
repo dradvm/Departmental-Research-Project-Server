@@ -6,8 +6,8 @@ import { LocalStrategy } from './local.strategy';
 import { PassportModule } from '@nestjs/passport';
 
 @Module({
-    imports: [PassportModule],
-    controllers: [AuthController],
-    providers: [AuthService, PrismaService, LocalStrategy],
+  imports: [PassportModule],
+  controllers: [AuthController],
+  providers: [AuthService, PrismaService, LocalStrategy]
 })
-export class AuthModule { }
+export class AuthModule {}
