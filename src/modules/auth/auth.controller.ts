@@ -1,20 +1,21 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthRequest } from './auth.request.dto';
 import { ValidationPipe } from 'src/pipes/validation.pipe';
-import { AuthGuard } from '@nestjs/passport';
+import { ApiResponse, TApiResponse } from 'src/common/base/api.response';
+import { ILoginResponse } from './auth.interface';
 
 @Controller('v1/auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
-  @UseGuards(AuthGuard('local'))
   @Post('/login')
-  login(@Body(new ValidationPipe()) request: AuthRequest): unknown {
+  async login(@Body(new ValidationPipe()) request: AuthRequest): Promise<TApiResponse<ILoginResponse>> {
     try {
-      return this.authService.authenticate(request);
+      const response = await this.authService.authenticate(request);
+      return ApiResponse.ok(response, 'Đăng nhập thành công', HttpStatus.OK);
     } catch (error) {
-      console.error('Errors:', error);
+      return ApiResponse.error(error, "Có lỗi xảy ra trong quá trình đăng nhập", HttpStatus.BAD_REQUEST);
     }
   }
 }
