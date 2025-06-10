@@ -14,7 +14,7 @@ import { CreateCouponDto } from './dto/create-coupon.dto';
 
 @Controller('coupon')
 export class CouponController {
-  constructor(private readonly couponService: CouponService) { }
+  constructor(private readonly couponService: CouponService) {}
 
   @Get('/:id')
   async getCoupon(@Param('id') id: string): Promise<Coupon | string> {
