@@ -1,6 +1,17 @@
 import { ApiResponseKey } from 'src/enums/api-response-key.enum';
 import { HttpStatus } from '@nestjs/common';
 
+interface ApiResponseData<T, E = unknown> {
+  [ApiResponseKey.STATUS]: boolean;
+  [ApiResponseKey.CODE]: HttpStatus;
+  [ApiResponseKey.DATA]?: T;
+  [ApiResponseKey.ERRORS]?: E;
+  [ApiResponseKey.MESSAGE]: string;
+  [ApiResponseKey.TIMESTAMP]: string;
+}
+
+export type TApiResponse<T, E = unknown> = ApiResponseData<T, E>
+
 export class ApiResponse {
   private static getTimestamp(): string {
     return new Date().toISOString();
@@ -9,7 +20,7 @@ export class ApiResponse {
     data: T,
     message: string = '',
     httpStatus: HttpStatus = HttpStatus.OK
-  ): Record<string, unknown> {
+  ): ApiResponseData<T> {
     return {
       [ApiResponseKey.STATUS]: true,
       [ApiResponseKey.CODE]: httpStatus,
@@ -19,11 +30,11 @@ export class ApiResponse {
     };
   }
 
-  static error<T>(
-    errors: T,
+  static error<E>(
+    errors: E,
     message: string,
     httpStatus: HttpStatus = HttpStatus.BAD_REQUEST
-  ): Record<string, unknown> {
+  ): ApiResponseData<E> {
     return {
       [ApiResponseKey.STATUS]: false,
       [ApiResponseKey.CODE]: httpStatus,
@@ -38,10 +49,10 @@ export class ApiResponse {
     httpStatus: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR
   ): Record<string, unknown> {
     return {
-      [ApiResponseKey.STATUS]:
-        httpStatus === HttpStatus.OK || httpStatus === HttpStatus.CREATED,
+      [ApiResponseKey.STATUS]: httpStatus === HttpStatus.OK || httpStatus === HttpStatus.CREATED,
       [ApiResponseKey.MESSAGE]: message,
-      [ApiResponseKey.TIMESTAMP]: this.getTimestamp()
+      [ApiResponseKey.TIMESTAMP]: this.getTimestamp(),
+      [ApiResponseKey.CODE]: httpStatus
     };
   }
 }

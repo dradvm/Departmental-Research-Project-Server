@@ -289,7 +289,7 @@ model User {
   idUser                               Int                    @id @default(autoincrement())
   name                                 String?                @db.VarChar(255)
   biography                            String?                @db.Text
-  role                                 String?                @db.VarChar(100)
+  role                                 String?                @db.VarChar(100) @default("USERS")
   gender                               String?                @db.VarChar(10)
   birthday                             DateTime?              @db.Date
   codeExpired                          String?                @db.VarChar(255)
