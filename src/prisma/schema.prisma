@@ -1,0 +1,349 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Answer {
+  idQuestion    Int
+  idAnswer      Int
+  idUser        Int?
+  contentAnswer String?  @db.Text
+  Question      Question @relation(fields: [idQuestion], references: [idQuestion], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_Question")
+  User          User?    @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_User")
+
+  @@id([idQuestion, idAnswer])
+  @@index([idUser], map: "fk_Answer_User")
+}
+
+model Cart {
+  idUser   Int
+  idCourse Int
+  Course   Course @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Cart_Course")
+  User     User   @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Cart_User")
+
+  @@id([idUser, idCourse])
+  @@index([idCourse], map: "fk_Cart_Course")
+}
+
+model Category {
+  idCategory     Int              @id @default(autoincrement())
+  nameCategory   String?          @db.VarChar(255)
+  CourseCategory CourseCategory[]
+}
+
+model Certificate {
+  idCourse        Int               @id
+  certificate     String?           @db.Text
+  Course          Course            @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Certificate_Course")
+  UserCertificate UserCertificate[]
+}
+
+model Coupon {
+  idCoupon         Int            @id @default(autoincrement())
+  type             String?        @db.VarChar(100)
+  value            Decimal?       @db.Decimal(10, 2)
+  startDate        DateTime?      @db.Date
+  endDate          DateTime?      @db.Date
+  quantity         Int?
+  appliedAmount    Int?
+  minRequire       Decimal?       @db.Decimal(10, 2)
+  maxValueDiscount Decimal?       @db.Decimal(10, 2)
+  code             String?        @db.VarChar(100)
+  idUser           Int?
+  User             User?          @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Coupon_User")
+  CouponCourse     CouponCourse[]
+  UserCoupon       UserCoupon[]
+
+  @@index([idUser], map: "fk_Coupon_User")
+}
+
+model CouponCourse {
+  idCoupon Int
+  idCourse Int
+  Coupon   Coupon @relation(fields: [idCoupon], references: [idCoupon], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Coupon")
+  Course   Course @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Course")
+
+  @@id([idCoupon, idCourse])
+  @@index([idCourse], map: "fk_CouponCourse_Course")
+}
+
+model Course {
+  idCourse        Int               @id @default(autoincrement())
+  idUser          Int?
+  title           String?           @db.VarChar(255)
+  subTitle        String?           @db.VarChar(255)
+  description     String?           @db.Text
+  price           Decimal?          @db.Decimal(10, 2)
+  isPublic        Boolean?
+  isAccepted      Boolean?
+  thumbnail       String?           @db.Text
+  requirement     String?           @db.Text
+  targetAudience  String?           @db.Text
+  Cart            Cart[]
+  Certificate     Certificate?
+  CouponCourse    CouponCourse[]
+  User            User?             @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Course_User")
+  CourseCategory  CourseCategory[]
+  CourseObjective CourseObjective[]
+  Enrollment      Enrollment[]
+  PaymentDetail   PaymentDetail[]
+  Review          Review[]
+  Section         Section[]
+  StudyRemind     StudyRemind[]
+  Wishlist        Wishlist[]
+
+  @@index([idUser], map: "fk_Course_User")
+}
+
+model CourseCategory {
+  idCourse   Int
+  idCategory Int
+  Category   Category @relation(fields: [idCategory], references: [idCategory], onDelete: NoAction, onUpdate: NoAction, map: "fk_CourseCategory_Category")
+  Course     Course   @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_CourseCategory_Course")
+
+  @@id([idCourse, idCategory])
+  @@index([idCategory], map: "fk_CourseCategory_Category")
+}
+
+model CourseObjective {
+  idCourse          Int
+  idCourseObjective Int
+  content           String? @db.Text
+  Course            Course  @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_CourseObjective_Course")
+
+  @@id([idCourse, idCourseObjective])
+}
+
+model Enrollment {
+  idUser       Int
+  idCourse     Int
+  dateRegister DateTime? @db.Date
+  finishStatus Boolean?
+  progress     Decimal?  @db.Decimal(5, 2)
+  Course       Course    @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Enrollment_Course")
+  User         User      @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Enrollment_User")
+
+  @@id([idUser, idCourse])
+  @@index([idCourse], map: "fk_Enrollment_Course")
+}
+
+model Follow {
+  idFollower                    Int
+  idFollowing                   Int
+  User_Follow_idFollowerToUser  User @relation("Follow_idFollowerToUser", fields: [idFollower], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Follow_Follower")
+  User_Follow_idFollowingToUser User @relation("Follow_idFollowingToUser", fields: [idFollowing], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Follow_Following")
+
+  @@id([idFollower, idFollowing])
+  @@index([idFollowing], map: "fk_Follow_Following")
+}
+
+model Lecture {
+  idCourse    Int
+  idSection   Int
+  idLecture   Int
+  nameLecture String?    @db.VarChar(255)
+  isDone      Boolean?
+  Section     Section    @relation(fields: [idCourse, idSection], references: [idCourse, idSection], onDelete: NoAction, onUpdate: NoAction, map: "fk_Lecture_Section")
+  Note        Note[]
+  Question    Question[]
+
+  @@id([idCourse, idSection, idLecture])
+}
+
+model Message {
+  idMessage                         Int       @id @default(autoincrement())
+  idUserSender                      Int?
+  idUserReceiver                    Int?
+  message                           String?   @db.Text
+  timeSend                          DateTime? @db.DateTime(0)
+  User_Message_idUserReceiverToUser User?     @relation("Message_idUserReceiverToUser", fields: [idUserReceiver], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Message_UserReceiver")
+  User_Message_idUserSenderToUser   User?     @relation("Message_idUserSenderToUser", fields: [idUserSender], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Message_UserSender")
+
+  @@index([idUserReceiver], map: "fk_Message_UserReceiver")
+  @@index([idUserSender], map: "fk_Message_UserSender")
+}
+
+model Note {
+  idNote    Int       @id @default(autoincrement())
+  timeNote  DateTime? @db.DateTime(0)
+  note      String?   @db.Text
+  idUser    Int?
+  idCourse  Int?
+  idSection Int?
+  idLecture Int?
+  Lecture   Lecture?  @relation(fields: [idCourse, idSection, idLecture], references: [idCourse, idSection, idLecture], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_Lecture")
+  User      User?     @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_User")
+
+  @@index([idCourse, idSection, idLecture], map: "fk_Note_Lecture")
+  @@index([idUser], map: "fk_Note_User")
+}
+
+model Notification {
+  idNotification       Int                    @id @default(autoincrement())
+  contentNotification  String?                @db.Text
+  idUser               Int?
+  User                 User?                  @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Notification_User")
+  NotificationReceiver NotificationReceiver[]
+
+  @@index([idUser], map: "fk_Notification_User")
+}
+
+model NotificationReceiver {
+  idNotification      Int
+  idUser              Int
+  timeGetNotification DateTime?    @db.DateTime(0)
+  Notification        Notification @relation(fields: [idNotification], references: [idNotification], onDelete: NoAction, onUpdate: NoAction, map: "fk_NotificationReceiver_Notification")
+  User                User         @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_NotificationReceiver_User")
+
+  @@id([idNotification, idUser])
+  @@index([idUser], map: "fk_NotificationReceiver_User")
+}
+
+model Payment {
+  idPayment     Int             @id @default(autoincrement())
+  timePayment   DateTime?       @db.DateTime(0)
+  totalPrice    Decimal?        @db.Decimal(10, 2)
+  idUser        Int?
+  User          User?           @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
+  PaymentDetail PaymentDetail[]
+
+  @@index([idUser], map: "fk_Payment_User")
+}
+
+model PaymentDetail {
+  idPayment Int
+  idCourse  Int
+  price     Decimal? @db.Decimal(10, 2)
+  Course    Course   @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_PaymentDetail_Course")
+  Payment   Payment  @relation(fields: [idPayment], references: [idPayment], onDelete: NoAction, onUpdate: NoAction, map: "fk_PaymentDetail_Payment")
+
+  @@id([idPayment, idCourse])
+  @@index([idCourse], map: "fk_PaymentDetail_Course")
+}
+
+model Question {
+  idQuestion      Int      @id @default(autoincrement())
+  idUser          Int?
+  idCourse        Int?
+  idSection       Int?
+  idLecture       Int?
+  contentQuestion String?  @db.Text
+  Answer          Answer[]
+  Lecture         Lecture? @relation(fields: [idCourse, idSection, idLecture], references: [idCourse, idSection, idLecture], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_Lecture")
+  User            User?    @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_User")
+
+  @@index([idCourse, idSection, idLecture], map: "fk_Question_Lecture")
+  @@index([idUser], map: "fk_Question_User")
+}
+
+model Report {
+  idReport      Int     @id @default(autoincrement())
+  idUser        Int?
+  contentReport String? @db.Text
+  User          User?   @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Report_User")
+
+  @@index([idUser], map: "fk_Report_User")
+}
+
+model Review {
+  idReview Int     @id @default(autoincrement())
+  idUser   Int?
+  idCourse Int?
+  rating   Int?
+  review   String? @db.Text
+  Course   Course? @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_Course")
+  User     User?   @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_User")
+
+  @@index([idCourse], map: "fk_Review_Course")
+  @@index([idUser], map: "fk_Review_User")
+}
+
+model Section {
+  idCourse    Int
+  idSection   Int
+  nameSection String?   @db.VarChar(255)
+  Lecture     Lecture[]
+  Course      Course    @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Section_Course")
+
+  @@id([idCourse, idSection])
+}
+
+model StudyRemind {
+  idStudyRemind Int       @id @default(autoincrement())
+  idUser        Int?
+  idCourse      Int?
+  timeRemind    DateTime? @db.DateTime(0)
+  typeRemind    String?   @db.VarChar(100)
+  Course        Course?   @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyRemind_Course")
+  User          User?     @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyRemind_User")
+
+  @@index([idCourse], map: "fk_StudyRemind_Course")
+  @@index([idUser], map: "fk_StudyRemind_User")
+}
+
+model User {
+  idUser                               Int                    @id @default(autoincrement())
+  name                                 String?                @db.VarChar(255)
+  biography                            String?                @db.Text
+  role                                 String?                @db.VarChar(100) @default("USERS")
+  gender                               String?                @db.VarChar(10)
+  birthday                             DateTime?              @db.Date
+  codeExpired                          String?                @db.VarChar(255)
+  codeId                               String?                @db.VarChar(255)
+  email                                String?                @unique(map: "email") @db.VarChar(255)
+  password                             String?                @db.VarChar(255)
+  Answer                               Answer[]
+  Cart                                 Cart[]
+  Coupon                               Coupon[]
+  Course                               Course[]
+  Enrollment                           Enrollment[]
+  Follow_Follow_idFollowerToUser       Follow[]               @relation("Follow_idFollowerToUser")
+  Follow_Follow_idFollowingToUser      Follow[]               @relation("Follow_idFollowingToUser")
+  Message_Message_idUserReceiverToUser Message[]              @relation("Message_idUserReceiverToUser")
+  Message_Message_idUserSenderToUser   Message[]              @relation("Message_idUserSenderToUser")
+  Note                                 Note[]
+  Notification                         Notification[]
+  NotificationReceiver                 NotificationReceiver[]
+  Payment                              Payment[]
+  Question                             Question[]
+  Report                               Report[]
+  Review                               Review[]
+  StudyRemind                          StudyRemind[]
+  UserCertificate                      UserCertificate[]
+  UserCoupon                           UserCoupon[]
+  Wishlist                             Wishlist[]
+}
+
+model UserCertificate {
+  idCourse    Int
+  idUser      Int
+  Certificate Certificate @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCertificate_Certificate")
+  User        User        @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCertificate_User")
+
+  @@id([idCourse, idUser])
+  @@index([idUser], map: "fk_UserCertificate_User")
+}
+
+model UserCoupon {
+  idUser   Int
+  idCoupon Int
+  Coupon   Coupon @relation(fields: [idCoupon], references: [idCoupon], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCoupon_Coupon")
+  User     User   @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCoupon_User")
+
+  @@id([idUser, idCoupon])
+  @@index([idCoupon], map: "fk_UserCoupon_Coupon")
+}
+
+model Wishlist {
+  idUser   Int
+  idCourse Int
+  Course   Course @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Wishlist_Course")
+  User     User   @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Wishlist_User")
+
+  @@id([idUser, idCourse])
+  @@index([idCourse], map: "fk_Wishlist_Course")
+}

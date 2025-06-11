@@ -10,7 +10,7 @@ interface ApiResponseData<T, E = unknown> {
   [ApiResponseKey.TIMESTAMP]: string;
 }
 
-export type TApiResponse<T, E = unknown> = ApiResponseData<T, E>
+export type TApiResponse<T, E = unknown> = ApiResponseData<T, E>;
 
 export class ApiResponse {
   private static getTimestamp(): string {
@@ -49,7 +49,8 @@ export class ApiResponse {
     httpStatus: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR
   ): Record<string, unknown> {
     return {
-      [ApiResponseKey.STATUS]: httpStatus === HttpStatus.OK || httpStatus === HttpStatus.CREATED,
+      [ApiResponseKey.STATUS]:
+        httpStatus === HttpStatus.OK || httpStatus === HttpStatus.CREATED,
       [ApiResponseKey.MESSAGE]: message,
       [ApiResponseKey.TIMESTAMP]: this.getTimestamp(),
       [ApiResponseKey.CODE]: httpStatus
