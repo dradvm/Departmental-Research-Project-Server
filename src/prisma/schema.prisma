@@ -8,42 +8,41 @@ datasource db {
 }
 
 model Answer {
-  idQuestion    Int
-  idAnswer      Int
-  idUser        Int?
+  answerId      Int @id @default(autoincrement())
+  userId        Int?
   contentAnswer String?  @db.Text
-  Question      Question @relation(fields: [idQuestion], references: [idQuestion], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_Question")
-  User          User?    @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_User")
+  questionId    Int 
+  Question      Question @relation(fields: [questionId], references: [questionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_Question")
+  User          User?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_User")
 
-  @@id([idQuestion, idAnswer])
-  @@index([idUser], map: "fk_Answer_User")
+  @@index([userId], map: "fk_Answer_User")
 }
 
 model Cart {
-  idUser   Int
-  idCourse Int
-  Course   Course @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Cart_Course")
-  User     User   @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Cart_User")
+  userId   Int
+  courseId Int
+  Course   Course @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Cart_Course")
+  User     User   @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Cart_User")
 
-  @@id([idUser, idCourse])
-  @@index([idCourse], map: "fk_Cart_Course")
+  @@id([userId, courseId])
+  @@index([courseId], map: "fk_Cart_Course")
 }
 
 model Category {
-  idCategory     Int              @id @default(autoincrement())
+  categoryId     Int              @id @default(autoincrement())
   nameCategory   String?          @db.VarChar(255)
   CourseCategory CourseCategory[]
 }
 
 model Certificate {
-  idCourse        Int               @id
+  courseId        Int               @id
   certificate     String?           @db.Text
-  Course          Course            @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Certificate_Course")
+  Course          Course            @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Certificate_Course")
   UserCertificate UserCertificate[]
 }
 
 model Coupon {
-  idCoupon         Int            @id @default(autoincrement())
+  couponId         Int            @id @default(autoincrement())
   type             String?        @db.VarChar(100)
   value            Decimal?       @db.Decimal(10, 2)
   startDate        DateTime?      @db.Date
@@ -53,27 +52,27 @@ model Coupon {
   minRequire       Decimal?       @db.Decimal(10, 2)
   maxValueDiscount Decimal?       @db.Decimal(10, 2)
   code             String?        @db.VarChar(100)
-  idUser           Int?
-  User             User?          @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Coupon_User")
+  userId           Int?
+  User             User?          @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Coupon_User")
   CouponCourse     CouponCourse[]
   UserCoupon       UserCoupon[]
 
-  @@index([idUser], map: "fk_Coupon_User")
+  @@index([userId], map: "fk_Coupon_User")
 }
 
 model CouponCourse {
-  idCoupon Int
-  idCourse Int
-  Coupon   Coupon @relation(fields: [idCoupon], references: [idCoupon], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Coupon")
-  Course   Course @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Course")
+  couponId Int
+  courseId Int
+  Coupon   Coupon @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Coupon")
+  Course   Course @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Course")
 
-  @@id([idCoupon, idCourse])
-  @@index([idCourse], map: "fk_CouponCourse_Course")
+  @@id([couponId, courseId])
+  @@index([courseId], map: "fk_CouponCourse_Course")
 }
 
 model Course {
-  idCourse        Int               @id @default(autoincrement())
-  idUser          Int?
+  courseId        Int               @id @default(autoincrement())
+  userId          Int?
   title           String?           @db.VarChar(255)
   subTitle        String?           @db.VarChar(255)
   description     String?           @db.Text
@@ -86,7 +85,7 @@ model Course {
   Cart            Cart[]
   Certificate     Certificate?
   CouponCourse    CouponCourse[]
-  User            User?             @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Course_User")
+  User            User?             @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Course_User")
   CourseCategory  CourseCategory[]
   CourseObjective CourseObjective[]
   Enrollment      Enrollment[]
@@ -96,197 +95,199 @@ model Course {
   StudyRemind     StudyRemind[]
   Wishlist        Wishlist[]
 
-  @@index([idUser], map: "fk_Course_User")
+  @@index([userId], map: "fk_Course_User")
 }
 
 model CourseCategory {
-  idCourse   Int
-  idCategory Int
-  Category   Category @relation(fields: [idCategory], references: [idCategory], onDelete: NoAction, onUpdate: NoAction, map: "fk_CourseCategory_Category")
-  Course     Course   @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_CourseCategory_Course")
+  courseId   Int
+  categoryId Int
+  Category   Category @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CourseCategory_Category")
+  Course     Course   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CourseCategory_Course")
 
-  @@id([idCourse, idCategory])
-  @@index([idCategory], map: "fk_CourseCategory_Category")
+  @@id([courseId, categoryId])
+  @@index([categoryId], map: "fk_CourseCategory_Category")
 }
 
 model CourseObjective {
-  idCourse          Int
-  idCourseObjective Int
+  courseId          Int
+  courseObjectiveId Int
   content           String? @db.Text
-  Course            Course  @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_CourseObjective_Course")
+  Course            Course  @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CourseObjective_Course")
 
-  @@id([idCourse, idCourseObjective])
+  @@id([courseId, courseObjectiveId])
 }
 
 model Enrollment {
-  idUser       Int
-  idCourse     Int
+  userId       Int
+  courseId     Int
   dateRegister DateTime? @db.Date
   finishStatus Boolean?
   progress     Decimal?  @db.Decimal(5, 2)
-  Course       Course    @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Enrollment_Course")
-  User         User      @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Enrollment_User")
+  Course       Course    @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Enrollment_Course")
+  User         User      @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Enrollment_User")
 
-  @@id([idUser, idCourse])
-  @@index([idCourse], map: "fk_Enrollment_Course")
+  @@id([userId, courseId])
+  @@index([courseId], map: "fk_Enrollment_Course")
 }
 
 model Follow {
-  idFollower                    Int
-  idFollowing                   Int
-  User_Follow_idFollowerToUser  User @relation("Follow_idFollowerToUser", fields: [idFollower], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Follow_Follower")
-  User_Follow_idFollowingToUser User @relation("Follow_idFollowingToUser", fields: [idFollowing], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Follow_Following")
+  followerId                    Int
+  followingId                   Int
+  User_Follow_followerIdToUser  User @relation("Follow_followerIdToUser", fields: [followerId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Follow_Follower")
+  User_Follow_followingIdToUser User @relation("Follow_followingIdToUser", fields: [followingId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Follow_Following")
 
-  @@id([idFollower, idFollowing])
-  @@index([idFollowing], map: "fk_Follow_Following")
+  @@id([followerId, followingId])
+  @@index([followingId], map: "fk_Follow_Following")
 }
 
 model Lecture {
-  idCourse    Int
-  idSection   Int
-  idLecture   Int
-  nameLecture String?    @db.VarChar(255)
+  lectureId   Int       @id @default(autoincrement()) // Khóa chính duy nhất
+  sectionId   Int       // Khóa ngoại tham chiếu đến Section
+  nameLecture String?   @db.VarChar(255)
+  video       String    @db.Text
   isDone      Boolean?
-  Section     Section    @relation(fields: [idCourse, idSection], references: [idCourse, idSection], onDelete: NoAction, onUpdate: NoAction, map: "fk_Lecture_Section")
+
+  // Quan hệ
+  Section     Section   @relation(fields: [sectionId], references: [sectionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Lecture_Section")
   Note        Note[]
   Question    Question[]
 
-  @@id([idCourse, idSection, idLecture])
+  @@index([sectionId], map: "idx_Lecture_Section") // Index để tối ưu truy vấn
 }
 
+
 model Message {
-  idMessage                         Int       @id @default(autoincrement())
-  idUserSender                      Int?
-  idUserReceiver                    Int?
+  messageId                         Int       @id @default(autoincrement())
+  userSenderId                      Int?
+  userReceiverId                    Int?
   message                           String?   @db.Text
   timeSend                          DateTime? @db.DateTime(0)
-  User_Message_idUserReceiverToUser User?     @relation("Message_idUserReceiverToUser", fields: [idUserReceiver], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Message_UserReceiver")
-  User_Message_idUserSenderToUser   User?     @relation("Message_idUserSenderToUser", fields: [idUserSender], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Message_UserSender")
+  User_Message_userReceiverIdToUser User?     @relation("Message_userReceiverIdToUser", fields: [userReceiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Message_UserReceiver")
+  User_Message_userSenderIdToUser   User?     @relation("Message_userSenderIdToUser", fields: [userSenderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Message_UserSender")
 
-  @@index([idUserReceiver], map: "fk_Message_UserReceiver")
-  @@index([idUserSender], map: "fk_Message_UserSender")
+  @@index([userReceiverId], map: "fk_Message_UserReceiver")
+  @@index([userSenderId], map: "fk_Message_UserSender")
 }
 
 model Note {
-  idNote    Int       @id @default(autoincrement())
+  noteId    Int       @id @default(autoincrement())
   timeNote  DateTime? @db.DateTime(0)
   note      String?   @db.Text
-  idUser    Int?
-  idCourse  Int?
-  idSection Int?
-  idLecture Int?
-  Lecture   Lecture?  @relation(fields: [idCourse, idSection, idLecture], references: [idCourse, idSection, idLecture], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_Lecture")
-  User      User?     @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_User")
+  userId    Int?
+  lectureId Int
+  Lecture   Lecture?  @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_Lecture")
+  User      User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_User")
 
-  @@index([idCourse, idSection, idLecture], map: "fk_Note_Lecture")
-  @@index([idUser], map: "fk_Note_User")
+  @@index([lectureId], map: "fk_Note_Lecture")
+  @@index([userId], map: "fk_Note_User")
 }
 
 model Notification {
-  idNotification       Int                    @id @default(autoincrement())
+  notificationId       Int                    @id @default(autoincrement())
   contentNotification  String?                @db.Text
-  idUser               Int?
-  User                 User?                  @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Notification_User")
+  userId               Int?
+  User                 User?                  @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Notification_User")
   NotificationReceiver NotificationReceiver[]
 
-  @@index([idUser], map: "fk_Notification_User")
+  @@index([userId], map: "fk_Notification_User")
 }
 
 model NotificationReceiver {
-  idNotification      Int
-  idUser              Int
+  notificationId      Int
+  userId              Int
   timeGetNotification DateTime?    @db.DateTime(0)
-  Notification        Notification @relation(fields: [idNotification], references: [idNotification], onDelete: NoAction, onUpdate: NoAction, map: "fk_NotificationReceiver_Notification")
-  User                User         @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_NotificationReceiver_User")
+  Notification        Notification @relation(fields: [notificationId], references: [notificationId], onDelete: NoAction, onUpdate: NoAction, map: "fk_NotificationReceiver_Notification")
+  User                User         @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_NotificationReceiver_User")
 
-  @@id([idNotification, idUser])
-  @@index([idUser], map: "fk_NotificationReceiver_User")
+  @@id([notificationId, userId])
+  @@index([userId], map: "fk_NotificationReceiver_User")
 }
 
 model Payment {
-  idPayment     Int             @id @default(autoincrement())
+  paymentId     Int             @id @default(autoincrement())
   timePayment   DateTime?       @db.DateTime(0)
   totalPrice    Decimal?        @db.Decimal(10, 2)
-  idUser        Int?
-  User          User?           @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
+  userId        Int?
+  User          User?           @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
   PaymentDetail PaymentDetail[]
 
-  @@index([idUser], map: "fk_Payment_User")
+  @@index([userId], map: "fk_Payment_User")
 }
 
 model PaymentDetail {
-  idPayment Int
-  idCourse  Int
+  paymentId Int
+  courseId  Int
   price     Decimal? @db.Decimal(10, 2)
-  Course    Course   @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_PaymentDetail_Course")
-  Payment   Payment  @relation(fields: [idPayment], references: [idPayment], onDelete: NoAction, onUpdate: NoAction, map: "fk_PaymentDetail_Payment")
+  Course    Course   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_PaymentDetail_Course")
+  Payment   Payment  @relation(fields: [paymentId], references: [paymentId], onDelete: NoAction, onUpdate: NoAction, map: "fk_PaymentDetail_Payment")
 
-  @@id([idPayment, idCourse])
-  @@index([idCourse], map: "fk_PaymentDetail_Course")
+  @@id([paymentId, courseId])
+  @@index([courseId], map: "fk_PaymentDetail_Course")
 }
 
 model Question {
-  idQuestion      Int      @id @default(autoincrement())
-  idUser          Int?
-  idCourse        Int?
-  idSection       Int?
-  idLecture       Int?
+  questionId      Int      @id @default(autoincrement())
+  userId          Int?
+  lectureId       Int?
   contentQuestion String?  @db.Text
   Answer          Answer[]
-  Lecture         Lecture? @relation(fields: [idCourse, idSection, idLecture], references: [idCourse, idSection, idLecture], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_Lecture")
-  User            User?    @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_User")
+  Lecture         Lecture? @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_Lecture")
+  User            User?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_User")
 
-  @@index([idCourse, idSection, idLecture], map: "fk_Question_Lecture")
-  @@index([idUser], map: "fk_Question_User")
+  @@index([lectureId], map: "fk_Question_Lecture")
+  @@index([userId], map: "fk_Question_User")
 }
 
 model Report {
-  idReport      Int     @id @default(autoincrement())
-  idUser        Int?
+  reportId      Int     @id @default(autoincrement())
+  userId        Int?
   contentReport String? @db.Text
-  User          User?   @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Report_User")
+  User          User?   @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Report_User")
 
-  @@index([idUser], map: "fk_Report_User")
+  @@index([userId], map: "fk_Report_User")
 }
 
 model Review {
-  idReview Int     @id @default(autoincrement())
-  idUser   Int?
-  idCourse Int?
+  reviewId Int     @id @default(autoincrement())
+  userId   Int?
+  courseId Int?
   rating   Int?
   review   String? @db.Text
-  Course   Course? @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_Course")
-  User     User?   @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_User")
+  Course   Course? @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_Course")
+  User     User?   @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_User")
 
-  @@index([idCourse], map: "fk_Review_Course")
-  @@index([idUser], map: "fk_Review_User")
+  @@index([courseId], map: "fk_Review_Course")
+  @@index([userId], map: "fk_Review_User")
 }
 
 model Section {
-  idCourse    Int
-  idSection   Int
+  sectionId   Int       @id @default(autoincrement()) // Khóa chính duy nhất
+  courseId    Int       // Khóa ngoại tham chiếu đến Course
   nameSection String?   @db.VarChar(255)
-  Lecture     Lecture[]
-  Course      Course    @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Section_Course")
 
-  @@id([idCourse, idSection])
+  // Quan hệ
+  Lecture     Lecture[]
+  Course      Course    @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Section_Course")
+
+  @@index([courseId], map: "idx_Section_Course") // Tạo index để tối ưu truy vấn theo courseId
 }
 
+
 model StudyRemind {
-  idStudyRemind Int       @id @default(autoincrement())
-  idUser        Int?
-  idCourse      Int?
+  studyRemindId Int       @id @default(autoincrement())
+  userId        Int?
+  courseId      Int?
   timeRemind    DateTime? @db.DateTime(0)
   typeRemind    String?   @db.VarChar(100)
-  Course        Course?   @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyRemind_Course")
-  User          User?     @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyRemind_User")
+  Course        Course?   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyRemind_Course")
+  User          User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyRemind_User")
 
-  @@index([idCourse], map: "fk_StudyRemind_Course")
-  @@index([idUser], map: "fk_StudyRemind_User")
+  @@index([courseId], map: "fk_StudyRemind_Course")
+  @@index([userId], map: "fk_StudyRemind_User")
 }
 
 model User {
-  idUser                               Int                    @id @default(autoincrement())
+  userId                               Int                    @id @default(autoincrement())
   name                                 String?                @db.VarChar(255)
   biography                            String?                @db.Text
   role                                 String?                @db.VarChar(100) @default("USERS")
@@ -301,10 +302,10 @@ model User {
   Coupon                               Coupon[]
   Course                               Course[]
   Enrollment                           Enrollment[]
-  Follow_Follow_idFollowerToUser       Follow[]               @relation("Follow_idFollowerToUser")
-  Follow_Follow_idFollowingToUser      Follow[]               @relation("Follow_idFollowingToUser")
-  Message_Message_idUserReceiverToUser Message[]              @relation("Message_idUserReceiverToUser")
-  Message_Message_idUserSenderToUser   Message[]              @relation("Message_idUserSenderToUser")
+  Follow_Follow_followerIdToUser       Follow[]               @relation("Follow_followerIdToUser")
+  Follow_Follow_followingIdToUser      Follow[]               @relation("Follow_followingIdToUser")
+  Message_Message_userReceiverIdToUser Message[]              @relation("Message_userReceiverIdToUser")
+  Message_Message_userSenderIdToUser   Message[]              @relation("Message_userSenderIdToUser")
   Note                                 Note[]
   Notification                         Notification[]
   NotificationReceiver                 NotificationReceiver[]
@@ -319,31 +320,31 @@ model User {
 }
 
 model UserCertificate {
-  idCourse    Int
-  idUser      Int
-  Certificate Certificate @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCertificate_Certificate")
-  User        User        @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCertificate_User")
+  courseId    Int
+  userId      Int
+  Certificate Certificate @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCertificate_Certificate")
+  User        User        @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCertificate_User")
 
-  @@id([idCourse, idUser])
-  @@index([idUser], map: "fk_UserCertificate_User")
+  @@id([courseId, userId])
+  @@index([userId], map: "fk_UserCertificate_User")
 }
 
 model UserCoupon {
-  idUser   Int
-  idCoupon Int
-  Coupon   Coupon @relation(fields: [idCoupon], references: [idCoupon], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCoupon_Coupon")
-  User     User   @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCoupon_User")
+  userId   Int
+  couponId Int
+  Coupon   Coupon @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCoupon_Coupon")
+  User     User   @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCoupon_User")
 
-  @@id([idUser, idCoupon])
-  @@index([idCoupon], map: "fk_UserCoupon_Coupon")
+  @@id([userId, couponId])
+  @@index([couponId], map: "fk_UserCoupon_Coupon")
 }
 
 model Wishlist {
-  idUser   Int
-  idCourse Int
-  Course   Course @relation(fields: [idCourse], references: [idCourse], onDelete: NoAction, onUpdate: NoAction, map: "fk_Wishlist_Course")
-  User     User   @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Wishlist_User")
+  userId   Int
+  courseId Int
+  Course   Course @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Wishlist_Course")
+  User     User   @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Wishlist_User")
 
-  @@id([idUser, idCourse])
-  @@index([idCourse], map: "fk_Wishlist_Course")
+  @@id([userId, courseId])
+  @@index([courseId], map: "fk_Wishlist_Course")
 }

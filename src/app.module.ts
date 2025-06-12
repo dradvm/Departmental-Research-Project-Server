@@ -9,11 +9,13 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { Keyv } from 'keyv';
 import { CacheableMemory } from 'cacheable';
+import { CourseModule } from './modules/course/course.module';
 
 @Module({
   imports: [
     AuthModule,
     PrismaModule,
+    CourseModule,
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => {

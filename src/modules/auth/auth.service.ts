@@ -59,14 +59,14 @@ export class AuthService {
       throw new UnauthorizedException('Email hoặc mật khẩu không chinh xác');
     }
 
-    const payload = { sub: user.idUser.toString() };
+    const payload = { sub: user.userId.toString() };
     const accessToken = await this.jwtService.signAsync(payload);
     const refreshToken = randomBytes(32).toString('hex');
     const crsfToken = randomBytes(32).toString('hex');
     //Lưu trữ refresh token vào redis để sau này so sánh
 
     const refreshTokenCacheData: { userId: string; expiresAt: number } = {
-      userId: user.idUser.toString(),
+      userId: user.userId.toString(),
       expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 ngày
     };
 
@@ -108,6 +108,6 @@ export class AuthService {
     }
 
     const { password: _, ...result } = user; // Exclude password from the result
-    return { ...result, idUser: BigInt(user.idUser) };
+    return { ...result, userId: BigInt(user.userId) };
   }
 }

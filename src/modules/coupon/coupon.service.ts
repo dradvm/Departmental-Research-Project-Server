@@ -63,7 +63,7 @@ export class CouponService {
     try {
       return await this.prisma.coupon.findUnique({
         where: {
-          idCoupon: id
+          couponId: id
         }
       });
     } catch (e) {
@@ -93,7 +93,7 @@ export class CouponService {
       const checkData: CreateCouponDto = this.getCheckedData(data);
       return await this.prisma.coupon.update({
         where: {
-          idCoupon: id
+          couponId: id
         },
         data: checkData
       });
@@ -106,7 +106,7 @@ export class CouponService {
     try {
       return await this.prisma.coupon.delete({
         where: {
-          idCoupon: id
+          couponId: id
         }
       });
     } catch (e) {
