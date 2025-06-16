@@ -7,7 +7,7 @@ import { ILoginResponse } from './auth.interface';
 
 @Controller('v1/auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('/login')
   async login(
@@ -17,6 +17,7 @@ export class AuthController {
       const response = await this.authService.authenticate(request);
       return ApiResponse.ok(response, 'Đăng nhập thành công', HttpStatus.OK);
     } catch (error) {
+      console.error('Login error:', error);
       return ApiResponse.error(
         error,
         'Có lỗi xảy ra trong quá trình đăng nhập',

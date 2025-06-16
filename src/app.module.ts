@@ -10,9 +10,11 @@ import { createKeyv } from '@keyv/redis';
 import { Keyv } from 'keyv';
 import { CacheableMemory } from 'cacheable';
 import { CourseModule } from './modules/course/course.module';
+import { UsersModule } from './modules/user/users.module';
 
 @Module({
   imports: [
+    UsersModule,
     AuthModule,
     PrismaModule,
     CourseModule,
@@ -36,4 +38,4 @@ import { CourseModule } from './modules/course/course.module';
   controllers: [AppController, CouponController],
   providers: [AppService, CouponService]
 })
-export class AppModule {}
+export class AppModule { }
