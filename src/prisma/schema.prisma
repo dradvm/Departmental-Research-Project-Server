@@ -8,14 +8,15 @@ datasource db {
 }
 
 model Answer {
-  answerId      Int @id @default(autoincrement())
+  answerId      Int       @id @default(autoincrement())
   userId        Int?
-  contentAnswer String?  @db.Text
-  questionId    Int 
-  Question      Question @relation(fields: [questionId], references: [questionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_Question")
-  User          User?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_User")
+  contentAnswer String?   @db.Text
+  questionId    Int?
+  Question      Question? @relation(fields: [questionId], references: [questionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_Question")
+  User          User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_User")
 
   @@index([userId], map: "fk_Answer_User")
+  @@index([questionId], map: "fk_Answer_Question")
 }
 
 model Cart {
@@ -141,20 +142,17 @@ model Follow {
 }
 
 model Lecture {
-  lectureId   Int       @id @default(autoincrement()) // Khóa chính duy nhất
-  sectionId   Int       // Khóa ngoại tham chiếu đến Section
-  nameLecture String?   @db.VarChar(255)
-  video       String    @db.Text
+  lectureId   Int        @id @default(autoincrement())
+  sectionId   Int?
+  nameLecture String?    @db.VarChar(255)
   isDone      Boolean?
-
-  // Quan hệ
-  Section     Section   @relation(fields: [sectionId], references: [sectionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Lecture_Section")
+  video       String     @db.Text
+  Section     Section?   @relation(fields: [sectionId], references: [sectionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Lecture_Section")
   Note        Note[]
   Question    Question[]
 
-  @@index([sectionId], map: "idx_Lecture_Section") // Index để tối ưu truy vấn
+  @@index([sectionId], map: "fk_Lecture_Section")
 }
-
 
 model Message {
   messageId                         Int       @id @default(autoincrement())
@@ -174,7 +172,7 @@ model Note {
   timeNote  DateTime? @db.DateTime(0)
   note      String?   @db.Text
   userId    Int?
-  lectureId Int
+  lectureId Int?
   Lecture   Lecture?  @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_Lecture")
   User      User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_User")
 
@@ -232,10 +230,8 @@ model Question {
   contentQuestion String?  @db.Text
   Answer          Answer[]
   Lecture         Lecture? @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_Lecture")
-  User            User?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_User")
 
   @@index([lectureId], map: "fk_Question_Lecture")
-  @@index([userId], map: "fk_Question_User")
 }
 
 model Report {
@@ -261,17 +257,14 @@ model Review {
 }
 
 model Section {
-  sectionId   Int       @id @default(autoincrement()) // Khóa chính duy nhất
-  courseId    Int       // Khóa ngoại tham chiếu đến Course
+  sectionId   Int       @id @default(autoincrement())
+  courseId    Int?
   nameSection String?   @db.VarChar(255)
-
-  // Quan hệ
   Lecture     Lecture[]
-  Course      Course    @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Section_Course")
+  Course      Course?   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Section_Course")
 
-  @@index([courseId], map: "idx_Section_Course") // Tạo index để tối ưu truy vấn theo courseId
+  @@index([courseId], map: "fk_Section_Course")
 }
-
 
 model StudyRemind {
   studyRemindId Int       @id @default(autoincrement())
@@ -290,13 +283,16 @@ model User {
   userId                               Int                    @id @default(autoincrement())
   name                                 String?                @db.VarChar(255)
   biography                            String?                @db.Text
-  role                                 String?                @db.VarChar(100) @default("USERS")
+  role                                 String?                @default("USERS") @db.VarChar(100)
   gender                               String?                @db.VarChar(10)
-  birthday                             DateTime?              @db.Date
   codeExpired                          String?                @db.VarChar(255)
   codeId                               String?                @db.VarChar(255)
   email                                String?                @unique(map: "email") @db.VarChar(255)
   password                             String?                @db.VarChar(255)
+  img                                  String?                @db.VarChar(255)
+  isActive                             Boolean?               @default(false)
+  createdAt                            DateTime               @default(now()) @db.DateTime(0)
+  updatedAt                            DateTime               @default(now()) @db.DateTime(0)
   Answer                               Answer[]
   Cart                                 Cart[]
   Coupon                               Coupon[]
@@ -310,7 +306,6 @@ model User {
   Notification                         Notification[]
   NotificationReceiver                 NotificationReceiver[]
   Payment                              Payment[]
-  Question                             Question[]
   Report                               Report[]
   Review                               Review[]
   StudyRemind                          StudyRemind[]
