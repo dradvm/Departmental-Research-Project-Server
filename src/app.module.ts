@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { CouponController } from './modules/coupon/coupon.controller';
 import { AppService } from './app.service';
-import { CouponService } from './modules/coupon/coupon.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -14,6 +12,12 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { TestController } from './modules/test/test.controller';
 import { StripeModule } from './modules/stripe/stripe.module';
 import { UsersModule } from './modules/user/users.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { PaymentDetailModule } from './modules/payment_detail/paymentdetail.module';
+import { CartModule } from './modules/cart/cart.module';
+import { CouponModule } from './modules/coupon/coupon.module';
+import { CouponCourseModule } from './modules/coupon_course/couponcourse.module';
+import { UserCouponModule } from './modules/user_coupon/usecoupon.module';
 
 @Module({
   imports: [
@@ -21,6 +25,12 @@ import { UsersModule } from './modules/user/users.module';
     AuthModule,
     PrismaModule,
     CourseModule,
+    PaymentModule,
+    PaymentDetailModule,
+    CartModule,
+    CouponModule,
+    CouponCourseModule,
+    UserCouponModule,
     CloudinaryModule,
     StripeModule.forRootAsync(),
     CacheModule.registerAsync({
@@ -40,7 +50,7 @@ import { UsersModule } from './modules/user/users.module';
       }
     })
   ],
-  controllers: [AppController, CouponController, TestController],
-  providers: [AppService, CouponService]
+  controllers: [AppController, TestController],
+  providers: [AppService]
 })
 export class AppModule {}
