@@ -24,11 +24,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
+      isGlobal: true
     }),
     ConfigModule,
     UsersModule,
@@ -63,39 +62,38 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         transport: {
-          host: "smtp.gmail.com",
+          host: 'smtp.gmail.com',
           port: 465,
           secure: true,
           // ignoreTLS: true,
           // secure: false,
           auth: {
             user: configService.get<string>('MAIL_USER'),
-            pass: configService.get<string>('MAIL_PASS'),
-          },
+            pass: configService.get<string>('MAIL_PASS')
+          }
         },
         defaults: {
-          from: '"No Reply" <no-reply@localhost>',
+          from: '"No Reply" <no-reply@localhost>'
         },
         // preview: true,
         template: {
           dir: process.cwd() + '/src/mail/templates/',
           adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
           options: {
-            strict: true,
-          },
-        },
+            strict: true
+          }
+        }
       }),
-      inject: [ConfigService],
-    }),
+      inject: [ConfigService]
+    })
   ],
-  controllers: [AppController, CouponController, TestController],
+  controllers: [AppController, TestController],
   providers: [
     AppService,
-    CouponService,
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
+      useClass: JwtAuthGuard
+    }
   ]
 })
 export class AppModule {}
