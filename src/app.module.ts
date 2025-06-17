@@ -13,9 +13,11 @@ import { CourseModule } from './modules/course/course.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { TestController } from './modules/test/test.controller';
 import { StripeModule } from './modules/stripe/stripe.module';
+import { UsersModule } from './modules/user/users.module';
 
 @Module({
   imports: [
+    UsersModule,
     AuthModule,
     PrismaModule,
     CourseModule,

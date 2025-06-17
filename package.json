@@ -34,6 +34,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.0",
     "@prisma/client": "^6.9.0",
+    "api-query-params": "5.4.0",
     "bcrypt": "^6.0.0",
     "cache-manager": "^7.0.0",
     "cacheable": "^1.10.0",

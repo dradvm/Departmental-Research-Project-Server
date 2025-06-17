@@ -18,14 +18,19 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', { exclude: [''] });
   app.enableCors({
     origin: 'http://localhost:3000',
     credentials: true
   });
 
   app.useGlobalFilters(new GlobalExceptionFilter());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true
+    })
+  );
   await app.listen(3001);
 }
 bootstrap();
