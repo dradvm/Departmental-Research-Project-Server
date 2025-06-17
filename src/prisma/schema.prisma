@@ -285,7 +285,7 @@ model User {
   biography                            String?                @db.Text
   role                                 String?                @default("USERS") @db.VarChar(100)
   gender                               String?                @db.VarChar(10)
-  codeExpired                          String?                @db.VarChar(255)
+  codeExpired                          DateTime?              @db.DateTime(0)
   codeId                               String?                @db.VarChar(255)
   email                                String?                @unique(map: "email") @db.VarChar(255)
   password                             String?                @db.VarChar(255)
@@ -293,6 +293,7 @@ model User {
   isActive                             Boolean?               @default(false)
   createdAt                            DateTime               @default(now()) @db.DateTime(0)
   updatedAt                            DateTime               @default(now()) @db.DateTime(0)
+  isDeleted                            Boolean?               @default(false)
   Answer                               Answer[]
   Cart                                 Cart[]
   Coupon                               Coupon[]

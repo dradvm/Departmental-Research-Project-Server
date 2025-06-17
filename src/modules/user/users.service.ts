@@ -5,14 +5,20 @@ import { hashPasswordHelper } from 'src/helpers/util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import aqp from 'api-query-params';
 import { isValidId } from 'src/helpers/validate-id.util';
-import { error } from 'console';
+import { CreateAuthDto } from 'src/auth/dto/create-auth.dto';
+import { v4 as uuidv4 } from 'uuid';
+import * as dayjs from 'dayjs';
+import { MailerService } from '@nestjs-modules/mailer';
 
 
 @Injectable()
 export class UsersService {
 
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailerService: MailerService,
 
+  ) { }
 
 
   isEmailExist = async (email: string) => {
@@ -59,18 +65,74 @@ export class UsersService {
     return result;
   }
 
+  // async create(createUserDto: CreateUserDto) {
+  //   try {
+  //     const { name, email, password, gender } = createUserDto;
+
+  //     // Check email
+  //     const isExist = await this.isEmailExist(email)
+  //     if (isExist) {
+  //       throw new BadRequestException(`Email đã tồn tại: ${email}. Vui lòng chọn email khác`)
+  //     }
+
+  //     // Hash password
+  //     const hashPassword = await hashPasswordHelper(password);
+  //     const user = await this.prisma.user.create({
+  //       data: {
+  //         name,
+  //         email,
+  //         password: hashPassword,
+  //         gender,
+  //       },
+  //     })
+  //     return {
+  //       id: user.userId
+  //     };
+  //   } catch (error) {
+  //     console.error('Lỗi tạo user:', error);
+
+  //     if (error instanceof BadRequestException) {
+  //       throw error;
+  //     }
+
+  //     throw new InternalServerErrorException('Không thể tạo user');
+  //   }
+  // }
+
   async create(createUserDto: CreateUserDto) {
     try {
       const { name, email, password, gender } = createUserDto;
 
-      // Check email
-      const isExist = await this.isEmailExist(email)
-      if (isExist) {
-        throw new BadRequestException(`Email đã tồn tại: ${email}. Vui lòng chọn email khác`)
+      // Kiểm tra user theo email (bao gồm cả user đã bị isDeleted)
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email },
+      });
+
+      // Nếu đã tồn tại và chưa bị xóa → không cho tạo lại
+      if (existingUser && !existingUser.isDeleted) {
+        throw new BadRequestException(`Email đã tồn tại: ${email}. Vui lòng chọn email khác`);
       }
 
-      // Hash password
+      // Hash mật khẩu
       const hashPassword = await hashPasswordHelper(password);
+
+      // Nếu user đã từng tồn tại và bị xóa mềm → khôi phục
+      if (existingUser && existingUser.isDeleted) {
+        const recoveredUser = await this.prisma.user.update({
+          where: { email },
+          data: {
+            name,
+            password: hashPassword,
+            gender,
+            isDeleted: false,
+            updatedAt: new Date(),
+          },
+        });
+
+        return { id: recoveredUser.userId };
+      }
+
+      // Nếu chưa từng tồn tại → tạo mới
       const user = await this.prisma.user.create({
         data: {
           name,
@@ -78,10 +140,10 @@ export class UsersService {
           password: hashPassword,
           gender,
         },
-      })
-      return {
-        id: user.userId
-      };
+      });
+
+      return { id: user.userId };
+
     } catch (error) {
       console.error('Lỗi tạo user:', error);
 
@@ -93,11 +155,13 @@ export class UsersService {
     }
   }
 
+
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
     if (filter.current) delete filter.current;
     if (filter.pageSize) delete filter.pageSize;
     const prismaFilter = this.convertAqpFilterToPrisma(filter)
+    console.log(prismaFilter);
     if (!current) current = 1;
     if (!pageSize) pageSize = 10;
 
@@ -106,7 +170,12 @@ export class UsersService {
     const skip = (current - 1) * (pageSize);
 
     const result = await this.prisma.user.findMany({
-      where: prismaFilter,
+      where: {
+        AND: [
+          prismaFilter,
+          { isDeleted: false }
+        ],
+      },
       take: pageSize,
       skip: skip,
       orderBy: sort ? this.parseSort(sort) : undefined,
@@ -117,9 +186,64 @@ export class UsersService {
     return { userWithoutPassword, totalPages };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number) {
+    if (!isValidId(id)) {
+      throw new BadRequestException('Id không đúng định dạng');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: {
+        userId: id,
+      },
+      select: {
+        userId: true,
+        name: true,
+        email: true,
+        gender: true,
+        biography: true,
+        img: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        // Bỏ password, codeId, codeExpired
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Không tìm thấy user với id ${id}`);
+    }
+
+    // Nếu bạn dùng soft delete
+    const deletedUser = await this.prisma.user.findFirst({
+      where: {
+        userId: id,
+        isDeleted: true,
+      },
+    });
+
+    if (deletedUser) {
+      throw new NotFoundException(`User với id ${id} đã bị xóa`);
+    }
+
+    return user;
   }
+
+  async findByEmail(email: string) {
+    if (!email) {
+      throw new BadRequestException('Email không được để trống');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Không tìm thấy user với email: ${email}`);
+    }
+
+    return user;
+  }
+
 
   async update(updateUserDto: UpdateUserDto) {
     const { id, name, biography, img, ...data } = updateUserDto;
@@ -145,19 +269,115 @@ export class UsersService {
     }
 
     try {
-      return await this.prisma.user.delete({
-        where: { userId: id },
+      // Check nếu user tồn tại và chưa bị xóa
+      const user = await this.prisma.user.findFirst({
+        where: { userId: id, isDeleted: false },
       });
-    } catch (error) {
-      if (
-        error.code === 'P2025' ||
-        error.message.includes('Record to delete does not exist')
-      ) {
-        throw new NotFoundException(`User với id ${id} không tồn tại`);
+
+      if (!user) {
+        throw new NotFoundException(`User với id ${id} không tồn tại hoặc đã bị xóa`);
       }
-      console.log(error)
+      // Soft delete
+      return await this.prisma.user.update({
+        where: { userId: id },
+        data: {
+          isDeleted: true,
+        },
+        select: {
+          userId: true,
+          name: true,
+          isDeleted: true,
+        },
+      });
+    }
+    catch (error) {
       throw new InternalServerErrorException('Lỗi không xác định');
     }
   }
 
+  async handleRegister(registerDto: CreateAuthDto) {
+    try {
+      const { name, email, password, gender } = registerDto;
+
+      // Kiểm tra user theo email (bao gồm cả user đã bị isDeleted)
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email },
+      });
+
+      // Nếu đã tồn tại và chưa bị xóa → không cho tạo lại
+      if (existingUser && !existingUser.isDeleted) {
+        throw new BadRequestException(`Email đã tồn tại: ${email}. Vui lòng chọn email khác`);
+      }
+
+      // Hash mật khẩu
+      const hashPassword = await hashPasswordHelper(password);
+      const codeId = uuidv4();
+      // Nếu user đã từng tồn tại và bị xóa mềm → khôi phục
+      if (existingUser && existingUser.isDeleted) {
+        const recoveredUser = await this.prisma.user.update({
+          where: { email },
+          data: {
+            name,
+            password: hashPassword,
+            gender,
+            isActive: false,
+            codeId: codeId,
+            codeExpired: dayjs().add(5, 'minutes').toDate(),
+            isDeleted: false,
+            updatedAt: new Date(),
+          },
+        });
+
+        //send email
+        this.mailerService.sendMail({
+          to: recoveredUser.email ?? undefined, // list of receivers
+          subject: 'Activate your account at @EduMarket', // Subject line
+          template: "register.hbs", //file html
+          context: {
+            name: recoveredUser.name,
+            activationCode: codeId
+          }
+        })
+
+        //trả ra phản hồi
+        return { id: recoveredUser.userId };
+      }
+
+      // Nếu chưa từng tồn tại → tạo mới
+      const user = await this.prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashPassword,
+          gender,
+          isActive: false,
+          codeId: codeId,
+          codeExpired: dayjs().add(5, 'minutes').toDate(),
+        },
+      });
+
+      //send email (bất đồng bộ)
+      this.mailerService.sendMail({
+        to: user.email ?? undefined, // list of receivers
+        subject: 'Activate your account at @EduMarket', // Subject line
+        template: "register.hbs", //file html
+        context: {
+          name: user.name,
+          activationCode: codeId
+        }
+      })
+
+      //trả ra phản hồi
+      return { id: user.userId };
+
+    } catch (error) {
+      console.error('Lỗi tạo user:', error);
+
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Không thể tạo user');
+    }
+  }
 }
