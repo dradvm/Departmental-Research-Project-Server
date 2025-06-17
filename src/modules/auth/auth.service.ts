@@ -23,7 +23,7 @@ export class AuthService {
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache
-  ) { }
+  ) {}
   //   async authenticate(request: AuthRequest): Promise<ILoginResponse> {
   //     try {
   //       return await this.createAuthContext(request);

@@ -6,7 +6,7 @@ export interface User {
   biography: string | null;
   role: string | null;
   gender: string | null;
-  codeExpired: string | null;
+  codeExpired: Date | null;
   codeId: string | null;
 }
 
