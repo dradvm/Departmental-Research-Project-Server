@@ -9,6 +9,9 @@ import { createKeyv } from '@keyv/redis';
 import { Keyv } from 'keyv';
 import { CacheableMemory } from 'cacheable';
 import { CourseModule } from './modules/course/course.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { TestController } from './modules/test/test.controller';
+import { StripeModule } from './modules/stripe/stripe.module';
 import { UsersModule } from './modules/user/users.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/passport/jwt-auth.guard';
@@ -28,9 +31,11 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     AuthModule,
     PrismaModule,
     CourseModule,
+    CloudinaryModule,
+    StripeModule.forRootAsync(),
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async () => {
+      useFactory: () => {
         return {
           stores: [
             new Keyv({
@@ -73,7 +78,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       inject: [ConfigService],
     }),
   ],
-  controllers: [AppController, CouponController],
+  controllers: [AppController, CouponController, TestController],
   providers: [
     AppService,
     CouponService,
@@ -83,4 +88,4 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     },
   ]
 })
-export class AppModule { }
+export class AppModule {}
