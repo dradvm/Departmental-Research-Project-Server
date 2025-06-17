@@ -10,15 +10,20 @@ import { createKeyv } from '@keyv/redis';
 import { Keyv } from 'keyv';
 import { CacheableMemory } from 'cacheable';
 import { CourseModule } from './modules/course/course.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { TestController } from './modules/test/test.controller';
+import { StripeModule } from './modules/stripe/stripe.module';
 
 @Module({
   imports: [
     AuthModule,
     PrismaModule,
     CourseModule,
+    CloudinaryModule,
+    StripeModule.forRootAsync(),
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async () => {
+      useFactory: () => {
         return {
           stores: [
             new Keyv({
@@ -33,7 +38,7 @@ import { CourseModule } from './modules/course/course.module';
       }
     })
   ],
-  controllers: [AppController, CouponController],
+  controllers: [AppController, CouponController, TestController],
   providers: [AppService, CouponService]
 })
 export class AppModule {}
