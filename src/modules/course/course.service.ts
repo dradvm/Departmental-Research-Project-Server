@@ -15,7 +15,12 @@ export class CourseService {
       include: {
         Section: {
           include: {
-            Lecture: true
+            Lecture: {
+              orderBy: { order: 'asc' }
+            }
+          },
+          orderBy: {
+            order: 'asc'
           }
         }
       }
