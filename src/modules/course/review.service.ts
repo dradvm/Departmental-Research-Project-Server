@@ -88,7 +88,7 @@ export class ReviewService {
           }))
         })
       },
-      take: 2,
+      take: 10,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { reviewId: cursor } : undefined,
       include: {
