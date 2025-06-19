@@ -80,13 +80,21 @@ export class ReviewService {
       where: {
         courseId: courseId,
         rating: rating ?? undefined,
-        ...(search.trim().length > 0 && {
-          OR: Array.from(new Set(search.split(' '))).map((word) => ({
+        AND: [
+          {
             review: {
-              contains: word
-            }
-          }))
-        })
+              not: null
+            },
+            ...(search.trim().length > 0 && {
+              OR: Array.from(new Set(search.split(' '))).map((word) => ({
+                review: {
+                  contains: word,
+                  not: null
+                }
+              }))
+            })
+          }
+        ]
       },
       take: 10,
       skip: cursor ? 1 : 0,
@@ -116,13 +124,21 @@ export class ReviewService {
       where: {
         courseId: courseId,
         rating: rating ?? undefined,
-        ...(search.trim().length > 0 && {
-          OR: Array.from(new Set(search.split(' '))).map((word) => ({
+        AND: [
+          {
             review: {
-              contains: word
-            }
-          }))
-        })
+              not: null
+            },
+            ...(search.trim().length > 0 && {
+              OR: Array.from(new Set(search.split(' '))).map((word) => ({
+                review: {
+                  contains: word,
+                  not: null
+                }
+              }))
+            })
+          }
+        ]
       }
     });
   }

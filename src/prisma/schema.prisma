@@ -142,15 +142,17 @@ model Follow {
 }
 
 model Lecture {
-  lectureId   Int        @id @default(autoincrement())
-  sectionId   Int?
-  nameLecture String?    @db.VarChar(255)
-  isDone      Boolean?
-  video       String     @db.Text
-  order       Int        @default(1)
-  Section     Section?   @relation(fields: [sectionId], references: [sectionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Lecture_Section")
-  Note        Note[]
-  Question    Question[]
+  lectureId        Int                @id @default(autoincrement())
+  sectionId        Int?
+  nameLecture      String?            @db.VarChar(255)
+  video            String             @db.Text
+  order            Int                @default(1)
+  time             Int                @default(0)
+  LastLectureStudy LastLectureStudy[]
+  Section          Section?           @relation(fields: [sectionId], references: [sectionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Lecture_Section")
+  Note             Note[]
+  Question         Question[]
+  StudyProgress    StudyProgress[]
 
   @@index([sectionId], map: "fk_Lecture_Section")
 }
@@ -305,6 +307,7 @@ model User {
   Enrollment                           Enrollment[]
   Follow_Follow_followerIdToUser       Follow[]               @relation("Follow_followerIdToUser")
   Follow_Follow_followingIdToUser      Follow[]               @relation("Follow_followingIdToUser")
+  LastLectureStudy                     LastLectureStudy[]
   Message_Message_userReceiverIdToUser Message[]              @relation("Message_userReceiverIdToUser")
   Message_Message_userSenderIdToUser   Message[]              @relation("Message_userSenderIdToUser")
   Note                                 Note[]
@@ -313,6 +316,7 @@ model User {
   Payment                              Payment[]
   Report                               Report[]
   Review                               Review[]
+  StudyProgress                        StudyProgress[]
   StudyRemind                          StudyRemind[]
   UserCertificate                      UserCertificate[]
   UserCoupon                           UserCoupon[]
@@ -347,4 +351,26 @@ model Wishlist {
 
   @@id([userId, courseId])
   @@index([courseId], map: "fk_Wishlist_Course")
+}
+
+model StudyProgress {
+  userId      Int
+  lectureId   Int
+  isDone      Boolean? @default(false)
+  currentTime Int?     @default(0)
+  Lecture     Lecture  @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyProgress_Lecture")
+  User        User     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyProgress_User")
+
+  @@id([userId, lectureId])
+  @@index([lectureId], map: "fk_StudyProgress_Lecture")
+}
+
+model LastLectureStudy {
+  userId    Int
+  lectureId Int
+  Lecture   Lecture @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_LastLectureStudy_Lecture")
+  User      User    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_LastLectureStudy_User")
+
+  @@id([userId, lectureId])
+  @@index([lectureId], map: "fk_LastLectureStudy_Lecture")
 }
