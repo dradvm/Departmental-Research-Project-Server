@@ -9,5 +9,5 @@ export class PaymentCreateDto {
 
   @IsOptional()
   @IsDateString()
-  timePayment?: string;
+  timePayment: string;
 }

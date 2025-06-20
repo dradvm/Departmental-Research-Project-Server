@@ -21,6 +21,22 @@ export class StudyProgressService {
     });
   }
 
+  async getTrackStudyProgress(lectureId: number, userId: number) {
+    return this.prisma.studyProgress.upsert({
+      where: {
+        userId_lectureId: {
+          userId: userId,
+          lectureId: lectureId
+        }
+      },
+      update: {},
+      create: {
+        userId: userId,
+        lectureId: lectureId
+      }
+    });
+  }
+
   async trackStudyProgress(lectureId: number, userId: number, seconds: number) {
     return this.prisma.studyProgress.upsert({
       where: {
@@ -59,17 +75,36 @@ export class StudyProgressService {
   getLastLectureStudy(
     courseId: number,
     userId: number
-    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   ): Promise<LastLectureStudy | null> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    return this.prisma.lastLectureStudy.findFirst({
+    return this.prisma.lastLectureStudy.findUnique({
       where: {
-        userId: userId,
-        Lecture: {
-          Section: {
-            courseId: courseId
-          }
+        userId_courseId: {
+          userId: userId,
+          courseId: courseId
         }
+      }
+    });
+  }
+
+  trackLastLectureStudy(
+    courseId: number,
+    userId: number,
+    lectureId: number
+  ): Promise<LastLectureStudy> {
+    return this.prisma.lastLectureStudy.upsert({
+      where: {
+        userId_courseId: {
+          userId: userId,
+          courseId: courseId
+        }
+      },
+      update: {
+        lectureId: lectureId
+      },
+      create: {
+        userId: userId,
+        courseId: courseId,
+        lectureId: lectureId
       }
     });
   }

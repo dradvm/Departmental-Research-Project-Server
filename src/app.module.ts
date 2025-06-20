@@ -23,6 +23,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { StudyProgressModule } from './modules/study-progress/study-progress.module';
+import { EnrollmentModule } from './modules/enrollment/enrollment.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     CouponCourseModule,
     UserCouponModule,
     CloudinaryModule,
+    StudyProgressModule,
+    EnrollmentModule,
     StripeModule.forRootAsync(),
     CacheModule.registerAsync({
       isGlobal: true,

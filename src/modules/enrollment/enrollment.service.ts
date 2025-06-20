@@ -11,8 +11,16 @@ export class EnrollmentService {
         userId: userId
       },
       include: {
-        User: true,
-        Course: true
+        Course: {
+          include: {
+            User: {
+              select: {
+                userId: true,
+                name: true
+              }
+            }
+          }
+        }
       }
     });
   }
