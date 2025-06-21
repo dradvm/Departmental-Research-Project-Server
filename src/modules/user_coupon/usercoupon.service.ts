@@ -17,11 +17,12 @@ export class UserCouponService {
     }
   }
 
-  async getAllCouponOfUser(userId: number): Promise<UserCoupon[]> {
+  async getAllCouponOfUser(userId?: number): Promise<UserCoupon[]> {
     try {
       return await this.prisma.userCoupon.findMany({
-        where: {
-          userId: userId
+        where: userId ? { userId: userId } : undefined,
+        include: {
+          Coupon: true
         }
       });
     } catch (e) {

@@ -1,20 +1,32 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PaymentDetail } from '@prisma/client';
-import { PaymentDetailCreateDto } from './dto/create-paymentdetail';
 
 @Injectable()
 export class PaymentDetailService {
   constructor(private prisma: PrismaService) {}
 
-  async addCourseIntoCart(
-    data: PaymentDetailCreateDto
-  ): Promise<PaymentDetail> {
+  // calculate total price and final price of a payment with its ID
+  async getTotalPriceOfOnePayment(
+    paymentId: number,
+    tx?: Prisma.TransactionClient
+  ): Promise<{ totalPrice: Decimal; final_price: Decimal }> {
     try {
-      const paymentDetail = await this.prisma.paymentDetail.create({ data });
-      return paymentDetail;
+      if (!paymentId) throw new BadRequestException(`paymentId is required!`);
+      const client = tx ?? this.prisma;
+      const figure = await client.paymentDetail.aggregate({
+        where: { paymentId: paymentId },
+        _sum: { price: true, final_price: true }
+      });
+      return {
+        totalPrice: figure._sum?.price ?? new Decimal(0),
+        final_price: figure._sum?.final_price ?? new Decimal(0)
+      };
     } catch (e) {
-      throw new BadRequestException(`Can not add item into cart: ${e}`);
+      throw new BadRequestException(`
+      Can not get total price of payment ${paymentId}: ${e}  
+      `);
     }
   }
 }
