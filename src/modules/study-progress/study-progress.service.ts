@@ -21,6 +21,31 @@ export class StudyProgressService {
     });
   }
 
+  async getCourseStudyProgress(courseId: number, userId: number) {
+    return this.prisma.course.findUnique({
+      where: { courseId: courseId },
+      include: {
+        Section: {
+          include: {
+            Lecture: {
+              orderBy: { order: 'asc' },
+              include: {
+                StudyProgress: {
+                  where: {
+                    userId: userId
+                  }
+                }
+              }
+            }
+          },
+          orderBy: {
+            order: 'asc'
+          }
+        }
+      }
+    });
+  }
+
   async getTrackStudyProgress(lectureId: number, userId: number) {
     return this.prisma.studyProgress.upsert({
       where: {

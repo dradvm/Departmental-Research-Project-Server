@@ -3,17 +3,16 @@ import {
   Controller,
   Get,
   Param,
-  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Post,
-  Query,
   Req
 } from '@nestjs/common';
 import { ApiRequestData } from 'src/common/base/api.request';
 import { StudyProgressService } from './study-progress.service';
 import { LastLectureDto } from './dto/last-lecture';
 import { TrackStudyProgressDto } from './dto/track-study-progress';
+import { TrackStudyCompleteDto } from './dto/track-study-complete';
 
 @Controller('study-progress')
 export class StudyProgressController {
@@ -52,6 +51,17 @@ export class StudyProgressController {
     );
   }
 
+  @Get('/course/:courseId')
+  getCourseStudyProgress(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Req() req: ApiRequestData
+  ) {
+    return this.studyProgressService.getCourseStudyProgress(
+      courseId,
+      req.user.userId
+    );
+  }
+
   @Get('track-lecture/:lectureId')
   getTrackStudyProgress(
     @Param('lectureId', ParseIntPipe) lectureId: number,
@@ -79,13 +89,13 @@ export class StudyProgressController {
   @Patch('toggle-lecture/:lectureId')
   toggleStudyProgress(
     @Param('lectureId', ParseIntPipe) lectureId: number,
-    @Query('isDone', ParseBoolPipe) isDone: boolean,
+    @Body() body: TrackStudyCompleteDto,
     @Req() req: ApiRequestData
   ) {
     return this.studyProgressService.toggleStudyProgress(
       lectureId,
       req.user.userId,
-      isDone
+      body.isDone
     );
   }
 }
