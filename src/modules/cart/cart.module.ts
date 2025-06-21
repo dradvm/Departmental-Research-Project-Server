@@ -1,13 +1,14 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { CartController } from './cart.controller';
 import { CartService } from './cart.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
-import { PaymentService } from '../payment/payment.service';
+import { CouponCourseModule } from '../coupon_course/couponcourse.module';
+import { PaymentModule } from '../payment/payment.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, CouponCourseModule, forwardRef(() => PaymentModule)],
   controllers: [CartController],
-  providers: [CartService, PaymentService],
+  providers: [CartService],
   exports: [CartService]
 })
 export class CartModule {}

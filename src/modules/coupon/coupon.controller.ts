@@ -17,15 +17,27 @@ export class CouponController {
   constructor(private readonly couponService: CouponService) {}
 
   @Get('/:id')
-  async getCoupon(@Param('id') id: string): Promise<Coupon | string> {
+  async getCoupon(@Param('id') id: string): Promise<Coupon> {
     const coupon = await this.couponService.getCouponById(parseInt(id));
     if (coupon) return coupon;
     else throw new NotFoundException(`Could not find coupon with id: ${id}`);
   }
 
+  @Get('/byCode/:code')
+  async getCouponByCode(@Param('code') code: string): Promise<Coupon> {
+    const coupon = await this.couponService.getCouponByCode(code);
+    if (coupon) return coupon;
+    else throw new NotFoundException(`Could not find coupon by code ${code}`);
+  }
+
   @Get('/get/all')
   async getAllCoupons(): Promise<Coupon[]> {
     return await this.couponService.getAllCoupons();
+  }
+
+  @Get(`isExisting/:code`)
+  async checkIsExistingCode(@Param('code') code: string): Promise<boolean> {
+    return await this.couponService.isExistingCode(code);
   }
 
   @Post()
