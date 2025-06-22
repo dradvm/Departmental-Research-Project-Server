@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from 'src/prisma/prisma.module';
-import { PaymentDetailController } from './paymentdetail.controller';
 import { PaymentDetailService } from './paymentdetail.service';
+import { CouponCourseModule } from '../coupon_course/couponcourse.module';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [PaymentDetailController],
+  imports: [PrismaModule, CouponCourseModule],
+  controllers: [],
   providers: [PaymentDetailService],
   exports: [PaymentDetailService]
 })

@@ -1,14 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Cart } from '@prisma/client';
+import { Cart, Coupon, Prisma } from '@prisma/client';
 import { CartCreateDto } from './dto/create-cart';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PaymentService } from '../payment/payment.service';
+import { CouponCourseService } from '../coupon_course/couponcourse.service';
 
 @Injectable()
 export class CartService {
   constructor(
     private prisma: PrismaService,
-    private readonly paymentService: PaymentService
+    private readonly couponCourseService: CouponCourseService
   ) {}
 
   async addCourseIntoCart(data: CartCreateDto): Promise<Cart> {
@@ -23,9 +23,6 @@ export class CartService {
 
   async getAllCourseInCart(userId: number): Promise<any> {
     try {
-      const figure = await this.paymentService.getPaymentCountAndCost(
-        userId ? userId : undefined
-      );
       const cartDB = await this.prisma.cart.findMany({
         where: {
           userId: userId
@@ -44,21 +41,48 @@ export class CartService {
           }
         }
       });
-      const result = {
-        totalPrice: figure.totalPrice,
-        paymentCount: figure.paymentCount,
-        courses: cartDB.map((cart) => ({
+      const results: any[] = [];
+
+      for (const cart of cartDB) {
+        // handle coupon
+        const couponcourse =
+          await this.couponCourseService.getIsRunningCouponOfCourse(
+            cart.courseId
+          );
+
+        // use coupon
+        let savingAmount = 0;
+        if (couponcourse) {
+          const coupon: Coupon = couponcourse.Coupon;
+          // handle final price
+          // check if coupon is valid: time and quantity
+          if (
+            coupon.startDate < new Date() &&
+            new Date() < coupon.endDate &&
+            coupon.appliedAmount < coupon.quantity
+          ) {
+            // discount: %
+            if (coupon.type === 'discount')
+              savingAmount =
+                (cart.Course.price.toNumber() * coupon.value.toNumber()) / 100;
+            else if (coupon.type === 'voucher')
+              savingAmount = coupon.value.toNumber();
+
+            if (savingAmount > coupon.maxValueDiscount.toNumber())
+              savingAmount = coupon.maxValueDiscount.toNumber();
+          }
+        }
+
+        results.push({
           courseId: cart.courseId,
           title: cart.Course.title,
           price: cart.Course.price,
+          final_price: Math.max(0, cart.Course.price.toNumber() - savingAmount),
           thumbnail: cart.Course.thumbnail,
-          Coupons: cart.Course.CouponCourse.map((cou) => ({
-            ...cou.Coupon
-          })),
           teacher: cart.Course.User
-        }))
-      };
-      return result;
+        });
+      }
+      return results;
     } catch (e) {
       throw new BadRequestException(
         `Can not get all courses in cart of user ${userId}: ${e}`
@@ -68,10 +92,12 @@ export class CartService {
 
   async removeOneCourseFromCart(
     userId: number,
-    coursedId: number
+    coursedId: number,
+    tx?: Prisma.TransactionClient
   ): Promise<Cart> {
     try {
-      return this.prisma.cart.delete({
+      const client = tx ?? this.prisma;
+      return client.cart.delete({
         where: {
           userId_courseId: {
             userId: userId,
