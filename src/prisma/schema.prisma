@@ -177,13 +177,13 @@ model Message {
 }
 
 model Note {
-  noteId    Int       @id @default(autoincrement())
-  timeNote  DateTime? @db.DateTime(0)
-  note      String?   @db.Text
+  noteId    Int      @id @default(autoincrement())
+  timeNote  Int?
+  note      String?  @db.Text
   userId    Int?
   lectureId Int?
-  Lecture   Lecture?  @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_Lecture")
-  User      User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_User")
+  Lecture   Lecture? @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_Lecture")
+  User      User?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_User")
 
   @@index([lectureId], map: "fk_Note_Lecture")
   @@index([userId], map: "fk_Note_User")
@@ -214,10 +214,10 @@ model Payment {
   paymentId     Int             @id @default(autoincrement())
   timePayment   DateTime        @db.DateTime(0)
   totalPrice    Decimal         @db.Decimal(10, 2)
-  userId        Int?
+  userId        Int
   couponId      Int?
   final_price   Decimal         @default(0.00) @db.Decimal(10, 2)
-  User          User?           @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
+  User          User            @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
   Coupon        Coupon?         @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_coupon")
   PaymentDetail PaymentDetail[]
 
