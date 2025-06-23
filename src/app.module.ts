@@ -23,7 +23,7 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { TransformInterceptor } from './core/transform.interceptor';
+// import { TransformInterceptor } from './core/transform.interceptor';
 import { StudyProgressModule } from './modules/study-progress/study-progress.module';
 import { EnrollmentModule } from './modules/enrollment/enrollment.module';
 import { NoteModule } from './modules/note/note.module';
@@ -100,11 +100,11 @@ import { NoteModule } from './modules/note/note.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TransformInterceptor,
-    },
+    }
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: TransformInterceptor,
+    // },
   ]
 })
-export class AppModule { }
+export class AppModule {}

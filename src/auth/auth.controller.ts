@@ -10,10 +10,10 @@ import { MailerService } from '@nestjs-modules/mailer';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly mailerService: MailerService,
-  ) { }
+    private readonly mailerService: MailerService
+  ) {}
 
-  @Post("login")
+  @Post('login')
   @Public()
   @UseGuards(LocalAuthGuard)
   @ResponseMessage('fetch login')
@@ -36,25 +36,24 @@ export class AuthController {
 
   @Post('retry-active')
   @Public()
-  retryActive(@Body("email") email: string) {
+  retryActive(@Body('email') email: string) {
     return this.authService.retryActive(email);
   }
 
   @Get('mail')
   @Public()
   testMail() {
-    this.mailerService
-      .sendMail({
-        to: 'thntqt2908@gmail.com', // list of receivers
-        subject: 'Testing Nest MailerModule ✔', // Subject line
-        text: 'welcome', // plaintext body
-        template: "register.hbs", //file html
-        context: {
-          name: "Nhuw",
-          activationCode: 123456789
-        }
-      })
-    return "ok"
+    this.mailerService.sendMail({
+      to: 'thntqt2908@gmail.com', // list of receivers
+      subject: 'Testing Nest MailerModule ✔', // Subject line
+      text: 'welcome', // plaintext body
+      template: 'register.hbs', //file html
+      context: {
+        name: 'Nhuw',
+        activationCode: 123456789
+      }
+    });
+    return 'ok';
   }
 
   @Get('test-axios')
@@ -66,9 +65,7 @@ export class AuthController {
 
     return {
       receivedToken: authHeader || null,
-      message: 'Token received on server.',
+      message: 'Token received on server.'
     };
   }
-
 }
-
