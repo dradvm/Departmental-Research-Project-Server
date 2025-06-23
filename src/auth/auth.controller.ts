@@ -2,8 +2,8 @@ import { Controller, Post, UseGuards, Req, Body, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request } from 'express';
 import { LocalAuthGuard } from './passport/local-auth.guard';
-import { Public } from 'src/decorator/customize';
-import { CreateAuthDto } from './dto/create-auth.dto';
+import { Public, ResponseMessage } from 'src/decorator/customize';
+import { CodeAuthDto, CreateAuthDto } from './dto/create-auth.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 
 @Controller('auth')
@@ -16,6 +16,7 @@ export class AuthController {
   @Post("login")
   @Public()
   @UseGuards(LocalAuthGuard)
+  @ResponseMessage('fetch login')
   handleLogin(@Req() req: Request) {
     return this.authService.login(req.user);
   }
@@ -25,6 +26,18 @@ export class AuthController {
   @Public()
   register(@Body() registerDto: CreateAuthDto) {
     return this.authService.handleRegister(registerDto);
+  }
+
+  @Post('check-code')
+  @Public()
+  checkCode(@Body() registerDto: CodeAuthDto) {
+    return this.authService.checkCode(registerDto);
+  }
+
+  @Post('retry-active')
+  @Public()
+  retryActive(@Body("email") email: string) {
+    return this.authService.retryActive(email);
   }
 
   @Get('mail')
@@ -43,5 +56,19 @@ export class AuthController {
       })
     return "ok"
   }
+
+  @Get('test-axios')
+  @Public()
+  @ResponseMessage('test axios')
+  testAxios(@Req() req: Request) {
+    const authHeader = req.headers['authorization'];
+    console.log('>>> Received token:', authHeader); // ✅ kiểm tra tại đây
+
+    return {
+      receivedToken: authHeader || null,
+      message: 'Token received on server.',
+    };
+  }
+
 }
 

@@ -20,3 +20,11 @@ export class CreateAuthDto {
     @IsNotEmpty({ message: "Giới tính không được để trống" })
     gender: string;
 }
+
+export class CodeAuthDto {
+    @IsNotEmpty({ message: "Id không được để trống" })
+    userId: string;
+
+    @IsNotEmpty({ message: "Code không được để trống" })
+    code: string;
+}

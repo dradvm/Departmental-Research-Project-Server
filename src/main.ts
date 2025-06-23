@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { GlobalExceptionFilter } from './exceptions/global-exception.filter';
+//import { GlobalExceptionFilter } from './exceptions/global-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as express from 'express';
@@ -24,13 +24,24 @@ async function bootstrap() {
     credentials: true
   });
 
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  //app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true
     })
   );
+
+  //config cors
+  app.enableCors(
+    {
+      "origin": true,
+      "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+      "preflightContinue": false,
+      credentials: true
+    }
+  );
+
   await app.listen(3001);
 }
 bootstrap();
