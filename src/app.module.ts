@@ -19,10 +19,11 @@ import { CouponCourseModule } from './modules/coupon_course/couponcourse.module'
 import { UserCouponModule } from './modules/user_coupon/usecoupon.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/passport/jwt-auth.guard';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { TransformInterceptor } from './core/transform.interceptor';
 
 @Module({
   imports: [
@@ -93,7 +94,11 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard
-    }
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
   ]
 })
-export class AppModule {}
+export class AppModule { }

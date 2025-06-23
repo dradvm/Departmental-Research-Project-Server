@@ -5,7 +5,7 @@ import { hashPasswordHelper } from 'src/helpers/util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import aqp from 'api-query-params';
 import { isValidId } from 'src/helpers/validate-id.util';
-import { CreateAuthDto } from 'src/auth/dto/create-auth.dto';
+import { CodeAuthDto, CreateAuthDto } from 'src/auth/dto/create-auth.dto';
 import { v4 as uuidv4 } from 'uuid';
 import * as dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -379,5 +379,63 @@ export class UsersService {
 
       throw new InternalServerErrorException('Không thể tạo user');
     }
+  }
+
+  async handleActive(data: CodeAuthDto) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        userId: +data.userId,
+        codeId: data.code,
+      },
+    });
+    if (!user) {
+      throw new BadRequestException("Mã code không hợp lệ hoặc đã hết hạn")
+    }
+    //check expire code
+    const isBeforeCheck = dayjs().isBefore(user.codeExpired);
+    if (isBeforeCheck) {
+      //valid => update user
+      await this.prisma.user.update({
+        where: { userId: +data.userId },
+        data: {
+          isActive: true,
+        }
+      })
+      return { isBeforeCheck };
+    } else {
+      throw new BadRequestException("Mã code không hợp lệ hoặc đã hết hạn")
+    }
+  }
+
+  async retryActive(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email }
+    })
+    if (!user) {
+      throw new BadRequestException("Tài khoản không tồn tại")
+    }
+    if (user.isActive) {
+      throw new BadRequestException("Tài khoản đã được kích hoạt")
+    }
+    //update user
+    const codeId = uuidv4();
+    await this.prisma.user.update({
+      where: { email },
+      data: {
+        codeId: codeId,
+        codeExpired: dayjs().add(5, 'minutes').toDate(),
+      }
+    })
+    //send mail
+    this.mailerService.sendMail({
+      to: user.email ?? undefined, // list of receivers
+      subject: 'Activate your account at @EduMarket', // Subject line
+      template: "register.hbs", //file html
+      context: {
+        name: user.name,
+        activationCode: codeId
+      }
+    })
+    return { id: user?.userId };
   }
 }
