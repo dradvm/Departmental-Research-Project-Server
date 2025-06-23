@@ -43,58 +43,64 @@ model Certificate {
 }
 
 model Coupon {
-  couponId         Int            @id @default(autoincrement())
-  type             String?        @db.VarChar(100)
-  value            Decimal?       @db.Decimal(10, 2)
-  startDate        DateTime?      @db.Date
-  endDate          DateTime?      @db.Date
-  quantity         Int?
-  appliedAmount    Int?
-  minRequire       Decimal?       @db.Decimal(10, 2)
-  maxValueDiscount Decimal?       @db.Decimal(10, 2)
-  code             String?        @db.VarChar(100)
+  couponId         Int             @id @default(autoincrement())
+  type             String          @db.VarChar(100)
+  value            Decimal         @db.Decimal(10, 2)
+  startDate        DateTime        @db.Date
+  endDate          DateTime        @db.Date
+  quantity         Int
+  appliedAmount    Int
+  minRequire       Decimal         @db.Decimal(10, 2)
+  maxValueDiscount Decimal         @db.Decimal(10, 2)
+  code             String          @db.VarChar(100)
   userId           Int?
-  User             User?          @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Coupon_User")
+  isGlobal         Boolean         @default(false)
+  User             User?           @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Coupon_User")
   CouponCourse     CouponCourse[]
+  Payment          Payment[]
+  PaymentDetail    PaymentDetail[]
   UserCoupon       UserCoupon[]
 
   @@index([userId], map: "fk_Coupon_User")
 }
 
 model CouponCourse {
-  couponId Int
-  courseId Int
-  Coupon   Coupon @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Coupon")
-  Course   Course @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Course")
+  couponId   Int
+  courseId   Int
+  isRunning  Boolean @default(false)
+  isAccepted Boolean @default(false)
+  Coupon     Coupon  @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Coupon")
+  Course     Course  @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Course")
 
   @@id([couponId, courseId])
   @@index([courseId], map: "fk_CouponCourse_Course")
 }
 
 model Course {
-  courseId        Int               @id @default(autoincrement())
-  userId          Int?
-  title           String?           @db.VarChar(255)
-  subTitle        String?           @db.VarChar(255)
-  description     String?           @db.Text
-  price           Decimal?          @db.Decimal(10, 2)
-  isPublic        Boolean?
-  isAccepted      Boolean?
-  thumbnail       String?           @db.Text
-  requirement     String?           @db.Text
-  targetAudience  String?           @db.Text
-  Cart            Cart[]
-  Certificate     Certificate?
-  CouponCourse    CouponCourse[]
-  User            User?             @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Course_User")
-  CourseCategory  CourseCategory[]
-  CourseObjective CourseObjective[]
-  Enrollment      Enrollment[]
-  PaymentDetail   PaymentDetail[]
-  Review          Review[]
-  Section         Section[]
-  StudyRemind     StudyRemind[]
-  Wishlist        Wishlist[]
+  courseId         Int                @id @default(autoincrement())
+  userId           Int?
+  title            String?            @db.VarChar(255)
+  subTitle         String?            @db.VarChar(255)
+  description      String?            @db.Text
+  price            Decimal            @db.Decimal(10, 2)
+  isPublic         Boolean?
+  isAccepted       Boolean?
+  thumbnail        String?            @db.Text
+  requirement      String?            @db.Text
+  targetAudience   String?            @db.Text
+  Cart             Cart[]
+  Certificate      Certificate?
+  CouponCourse     CouponCourse[]
+  User             User?              @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Course_User")
+  CourseCategory   CourseCategory[]
+  CourseObjective  CourseObjective[]
+  Enrollment       Enrollment[]
+  LastLectureStudy LastLectureStudy[]
+  PaymentDetail    PaymentDetail[]
+  Review           Review[]
+  Section          Section[]
+  StudyRemind      StudyRemind[]
+  Wishlist         Wishlist[]
 
   @@index([userId], map: "fk_Course_User")
 }
@@ -142,15 +148,17 @@ model Follow {
 }
 
 model Lecture {
-  lectureId   Int        @id @default(autoincrement())
-  sectionId   Int?
-  nameLecture String?    @db.VarChar(255)
-  isDone      Boolean?
-  video       String     @db.Text
-  order       Int        @default(1)
-  Section     Section?   @relation(fields: [sectionId], references: [sectionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Lecture_Section")
-  Note        Note[]
-  Question    Question[]
+  lectureId        Int                @id @default(autoincrement())
+  sectionId        Int?
+  nameLecture      String?            @db.VarChar(255)
+  video            String             @db.Text
+  order            Int                @default(1)
+  time             Int                @default(0)
+  LastLectureStudy LastLectureStudy[]
+  Section          Section?           @relation(fields: [sectionId], references: [sectionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Lecture_Section")
+  Note             Note[]
+  Question         Question[]
+  StudyProgress    StudyProgress[]
 
   @@index([sectionId], map: "fk_Lecture_Section")
 }
@@ -169,13 +177,13 @@ model Message {
 }
 
 model Note {
-  noteId    Int       @id @default(autoincrement())
-  timeNote  DateTime? @db.DateTime(0)
-  note      String?   @db.Text
+  noteId    Int      @id @default(autoincrement())
+  timeNote  Int?
+  note      String?  @db.Text
   userId    Int?
   lectureId Int?
-  Lecture   Lecture?  @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_Lecture")
-  User      User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_User")
+  Lecture   Lecture? @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_Lecture")
+  User      User?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_User")
 
   @@index([lectureId], map: "fk_Note_Lecture")
   @@index([userId], map: "fk_Note_User")
@@ -204,24 +212,32 @@ model NotificationReceiver {
 
 model Payment {
   paymentId     Int             @id @default(autoincrement())
-  timePayment   DateTime?       @db.DateTime(0)
-  totalPrice    Decimal?        @db.Decimal(10, 2)
-  userId        Int?
-  User          User?           @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
+  timePayment   DateTime        @db.DateTime(0)
+  totalPrice    Decimal         @db.Decimal(10, 2)
+  userId        Int
+  couponId      Int?
+  final_price   Decimal         @default(0.00) @db.Decimal(10, 2)
+  User          User            @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
+  Coupon        Coupon?         @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_coupon")
   PaymentDetail PaymentDetail[]
 
   @@index([userId], map: "fk_Payment_User")
+  @@index([couponId], map: "fk_payment_coupon")
 }
 
 model PaymentDetail {
-  paymentId Int
-  courseId  Int
-  price     Decimal? @db.Decimal(10, 2)
-  Course    Course   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_PaymentDetail_Course")
-  Payment   Payment  @relation(fields: [paymentId], references: [paymentId], onDelete: NoAction, onUpdate: NoAction, map: "fk_PaymentDetail_Payment")
+  paymentId   Int
+  courseId    Int
+  price       Decimal @db.Decimal(10, 2)
+  couponId    Int?
+  final_price Decimal @default(0.00) @db.Decimal(10, 2)
+  Course      Course  @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_PaymentDetail_Course")
+  Payment     Payment @relation(fields: [paymentId], references: [paymentId], onDelete: NoAction, onUpdate: NoAction, map: "fk_PaymentDetail_Payment")
+  Coupon      Coupon? @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_paymentdetail_coupon")
 
   @@id([paymentId, courseId])
   @@index([courseId], map: "fk_PaymentDetail_Course")
+  @@index([couponId], map: "fk_paymentdetail_coupon")
 }
 
 model Question {
@@ -245,13 +261,15 @@ model Report {
 }
 
 model Review {
-  reviewId Int     @id @default(autoincrement())
-  userId   Int?
-  courseId Int?
-  rating   Int?
-  review   String? @db.Text
-  Course   Course? @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_Course")
-  User     User?   @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_User")
+  reviewId   Int       @id @default(autoincrement())
+  userId     Int?
+  courseId   Int?
+  rating     Int?
+  review     String?   @db.Text
+  created_at DateTime? @default(now()) @db.DateTime(0)
+  updated_at DateTime? @default(now()) @db.DateTime(0)
+  Course     Course?   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_Course")
+  User       User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_User")
 
   @@index([courseId], map: "fk_Review_Course")
   @@index([userId], map: "fk_Review_User")
@@ -291,7 +309,7 @@ model User {
   codeId                               String?                @db.VarChar(255)
   email                                String?                @unique(map: "email") @db.VarChar(255)
   password                             String?                @db.VarChar(255)
-  img                                  String?                @db.VarChar(255)
+  img                                  String?                @db.Text
   isActive                             Boolean?               @default(false)
   createdAt                            DateTime               @default(now()) @db.DateTime(0)
   updatedAt                            DateTime               @default(now()) @db.DateTime(0)
@@ -303,6 +321,7 @@ model User {
   Enrollment                           Enrollment[]
   Follow_Follow_followerIdToUser       Follow[]               @relation("Follow_followerIdToUser")
   Follow_Follow_followingIdToUser      Follow[]               @relation("Follow_followingIdToUser")
+  LastLectureStudy                     LastLectureStudy[]
   Message_Message_userReceiverIdToUser Message[]              @relation("Message_userReceiverIdToUser")
   Message_Message_userSenderIdToUser   Message[]              @relation("Message_userSenderIdToUser")
   Note                                 Note[]
@@ -311,6 +330,7 @@ model User {
   Payment                              Payment[]
   Report                               Report[]
   Review                               Review[]
+  StudyProgress                        StudyProgress[]
   StudyRemind                          StudyRemind[]
   UserCertificate                      UserCertificate[]
   UserCoupon                           UserCoupon[]
@@ -345,4 +365,29 @@ model Wishlist {
 
   @@id([userId, courseId])
   @@index([courseId], map: "fk_Wishlist_Course")
+}
+
+model StudyProgress {
+  userId      Int
+  lectureId   Int
+  isDone      Boolean? @default(false)
+  currentTime Int?     @default(0)
+  Lecture     Lecture  @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyProgress_Lecture")
+  User        User     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyProgress_User")
+
+  @@id([userId, lectureId])
+  @@index([lectureId], map: "fk_StudyProgress_Lecture")
+}
+
+model LastLectureStudy {
+  userId    Int
+  courseId  Int
+  lectureId Int?
+  Course    Course   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_LastLectureStudy_Course")
+  Lecture   Lecture? @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_LastLectureStudy_Lecture")
+  User      User     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_LastLectureStudy_User")
+
+  @@id([userId, courseId])
+  @@index([lectureId], map: "fk_LastLectureStudy_Lecture")
+  @@index([courseId], map: "fk_LastLectureStudy_Course")
 }

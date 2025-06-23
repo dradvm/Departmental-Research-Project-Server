@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNumber, ValidateIf } from 'class-validator';
 
 export class PaymentDetailCreateDto {
   @IsNumber()
@@ -7,7 +7,7 @@ export class PaymentDetailCreateDto {
   @IsNumber()
   courseId: number;
 
+  @ValidateIf((obj: PaymentDetailCreateDto) => obj.couponId !== null)
   @IsNumber()
-  @IsNotEmpty({ message: `price is not empty` })
-  price: number;
+  couponId: number | null;
 }

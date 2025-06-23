@@ -24,6 +24,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { TransformInterceptor } from './core/transform.interceptor';
+import { StudyProgressModule } from './modules/study-progress/study-progress.module';
+import { EnrollmentModule } from './modules/enrollment/enrollment.module';
+import { NoteModule } from './modules/note/note.module';
 
 @Module({
   imports: [
@@ -42,6 +45,9 @@ import { TransformInterceptor } from './core/transform.interceptor';
     CouponCourseModule,
     UserCouponModule,
     CloudinaryModule,
+    StudyProgressModule,
+    EnrollmentModule,
+    NoteModule,
     StripeModule.forRootAsync(),
     CacheModule.registerAsync({
       isGlobal: true,

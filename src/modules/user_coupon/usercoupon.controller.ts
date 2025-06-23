@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { UserCouponCreateDto } from './dto/create-usercoupon';
 import { UserCoupon } from '@prisma/client';
 import { UserCouponService } from './usercoupon.service';
@@ -14,10 +14,12 @@ export class UserCouponController {
     return await this.userCouponService.addOneCoupon(data);
   }
 
-  @Get('/user/:userId')
+  @Get('/user')
   async getAllCouponForUser(
-    @Param('userId') userId: string
+    @Query('userId') userId?: string
   ): Promise<UserCoupon[]> {
-    return await this.userCouponService.getAllCouponOfUser(parseInt(userId));
+    return await this.userCouponService.getAllCouponOfUser(
+      userId ? parseInt(userId) : undefined
+    );
   }
 }

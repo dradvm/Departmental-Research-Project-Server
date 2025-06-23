@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Coupon } from '@prisma/client';
+import { Coupon, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { CouponType } from 'src/enums/coupon-type.enum';
@@ -7,6 +7,20 @@ import { CouponType } from 'src/enums/coupon-type.enum';
 @Injectable()
 export class CouponService {
   constructor(private prisma: PrismaService) {}
+
+  async isExistingCode(code: string): Promise<boolean> {
+    try {
+      const coupon = await this.prisma.coupon.findFirst({
+        where: { code: code }
+      });
+      if (coupon) return true;
+      else return false;
+    } catch (e) {
+      throw new BadRequestException(`
+        Can not check if code ${code} is existing: ${e}
+      `);
+    }
+  }
 
   getCheckedData(data: CreateCouponDto): CreateCouponDto {
     if (data.startDate || data.endDate) {
@@ -47,7 +61,6 @@ export class CouponService {
     if (data.type === CouponType.DISCOUNT) {
       if (data.value > 100 || data.value <= 0)
         throw new BadRequestException(`discount value is only form 1 to 100`);
-      data.code = '';
     }
     // Voucher 300 000, 10 000
     if (data.type === CouponType.VOUCHER) {
@@ -59,15 +72,31 @@ export class CouponService {
     return data;
   }
 
-  async getCouponById(id: number): Promise<Coupon | null> {
+  async getCouponById(
+    id: number,
+    tx?: Prisma.TransactionClient
+  ): Promise<Coupon | null> {
     try {
-      return await this.prisma.coupon.findUnique({
+      const client = tx ?? this.prisma;
+      return await client.coupon.findUnique({
         where: {
           couponId: id
         }
       });
     } catch (e) {
       throw new BadRequestException(`Get coupon with id ${id} failed: ${e}`);
+    }
+  }
+
+  async getCouponByCode(code: string): Promise<Coupon | null> {
+    try {
+      return await this.prisma.coupon.findFirst({
+        where: { code: code }
+      });
+    } catch (e) {
+      throw new BadRequestException(`
+        Can not find coupon with code ${code}: ${e}
+      `);
     }
   }
 
