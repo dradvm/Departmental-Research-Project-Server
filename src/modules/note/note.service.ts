@@ -6,7 +6,7 @@ import { CreateNoteDTO, UpdateNoteDTO } from './dto/note';
 export class NoteService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getNotes(userId: number, courseId: number) {
+  async getNotes(userId: number, courseId: number, orderBy: boolean = true) {
     return this.prisma.note.findMany({
       where: {
         userId: userId,
@@ -24,6 +24,31 @@ export class NoteService {
             Section: true
           }
         }
+      },
+      orderBy: {
+        createdAt: orderBy ? 'desc' : 'asc'
+      }
+    });
+  }
+  async getNotesLecture(
+    userId: number,
+    lectureId: number,
+    orderBy: boolean = true
+  ) {
+    return this.prisma.note.findMany({
+      where: {
+        userId: userId,
+        lectureId: lectureId
+      },
+      include: {
+        Lecture: {
+          include: {
+            Section: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: orderBy ? 'desc' : 'asc'
       }
     });
   }

@@ -110,7 +110,7 @@ export class ReviewService {
         }
       },
       orderBy: {
-        created_at: 'desc'
+        createdAt: 'desc'
       }
     });
   }

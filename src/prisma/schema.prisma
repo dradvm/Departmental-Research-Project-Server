@@ -177,13 +177,15 @@ model Message {
 }
 
 model Note {
-  noteId    Int      @id @default(autoincrement())
+  noteId    Int       @id @default(autoincrement())
   timeNote  Int?
-  note      String?  @db.Text
+  note      String?   @db.Text
   userId    Int?
   lectureId Int?
-  Lecture   Lecture? @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_Lecture")
-  User      User?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_User")
+  createdAt DateTime? @default(now()) @db.DateTime(0)
+  updatedAt DateTime? @default(now()) @db.DateTime(0)
+  Lecture   Lecture?  @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_Lecture")
+  User      User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Note_User")
 
   @@index([lectureId], map: "fk_Note_Lecture")
   @@index([userId], map: "fk_Note_User")
@@ -266,7 +268,7 @@ model Review {
   courseId   Int?
   rating     Int?
   review     String?   @db.Text
-  created_at DateTime? @default(now()) @db.DateTime(0)
+  createdAt  DateTime? @default(now()) @db.DateTime(0)
   updated_at DateTime? @default(now()) @db.DateTime(0)
   Course     Course?   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_Course")
   User       User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_User")

@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Post,
@@ -21,9 +22,22 @@ export class NoteController {
   @Get('')
   getNotes(
     @Query('courseId', ParseIntPipe) courseId: number,
+    @Query('orderBy', ParseBoolPipe) orderBy: boolean,
     @Req() req: ApiRequestData
   ) {
-    return this.noteService.getNotes(req.user.userId, courseId);
+    return this.noteService.getNotes(req.user.userId, courseId, orderBy);
+  }
+  @Get('/lecture')
+  getNotesLecture(
+    @Query('lectureId', ParseIntPipe) lectureId: number,
+    @Query('orderBy', ParseBoolPipe) orderBy: boolean,
+    @Req() req: ApiRequestData
+  ) {
+    return this.noteService.getNotesLecture(
+      req.user.userId,
+      lectureId,
+      orderBy
+    );
   }
 
   @Get('/:noteId')
