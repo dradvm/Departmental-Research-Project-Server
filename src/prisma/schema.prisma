@@ -12,6 +12,8 @@ model Answer {
   userId        Int?
   contentAnswer String?   @db.Text
   questionId    Int?
+  createdAt     DateTime? @default(now()) @db.DateTime(0)
+  updatedAt     DateTime? @default(now()) @db.DateTime(0)
   Question      Question? @relation(fields: [questionId], references: [questionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_Question")
   User          User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_User")
 
@@ -213,15 +215,17 @@ model NotificationReceiver {
 }
 
 model Payment {
-  paymentId     Int             @id @default(autoincrement())
-  timePayment   DateTime        @db.DateTime(0)
-  totalPrice    Decimal         @db.Decimal(10, 2)
-  userId        Int
-  couponId      Int?
-  final_price   Decimal         @default(0.00) @db.Decimal(10, 2)
-  User          User            @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
-  Coupon        Coupon?         @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_coupon")
-  PaymentDetail PaymentDetail[]
+  paymentId          Int                  @id @default(autoincrement())
+  timePayment        DateTime             @db.DateTime(0)
+  totalPrice         Decimal              @db.Decimal(10, 2)
+  userId             Int
+  couponId           Int?
+  final_price        Decimal              @default(0.00) @db.Decimal(10, 2)
+  originalPrice      Decimal              @default(0.00) @db.Decimal(10, 2)
+  User               User                 @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
+  Coupon             Coupon?              @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_coupon")
+  PaymentDetail      PaymentDetail[]
+  PaymentTransaction PaymentTransaction[]
 
   @@index([userId], map: "fk_Payment_User")
   @@index([couponId], map: "fk_payment_coupon")
@@ -243,12 +247,15 @@ model PaymentDetail {
 }
 
 model Question {
-  questionId      Int      @id @default(autoincrement())
+  questionId      Int       @id @default(autoincrement())
   userId          Int?
   lectureId       Int?
-  contentQuestion String?  @db.Text
+  createdAt       DateTime? @default(now()) @db.DateTime(0)
+  updatedAt       DateTime? @default(now()) @db.DateTime(0)
+  questionTitle   String    @db.Text
+  questionContent String?   @db.Text
   Answer          Answer[]
-  Lecture         Lecture? @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_Lecture")
+  Lecture         Lecture?  @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_Lecture")
 
   @@index([lectureId], map: "fk_Question_Lecture")
 }
@@ -330,6 +337,7 @@ model User {
   Notification                         Notification[]
   NotificationReceiver                 NotificationReceiver[]
   Payment                              Payment[]
+  PaymentTransaction                   PaymentTransaction[]
   Report                               Report[]
   Review                               Review[]
   StudyProgress                        StudyProgress[]
@@ -392,4 +400,23 @@ model LastLectureStudy {
   @@id([userId, courseId])
   @@index([lectureId], map: "fk_LastLectureStudy_Lecture")
   @@index([courseId], map: "fk_LastLectureStudy_Course")
+}
+
+model PaymentTransaction {
+  id          Int       @id @default(autoincrement())
+  provider    String    @db.VarChar(50)
+  providerRef String    @unique(map: "UK_providerRef") @db.VarChar(255)
+  status      String    @db.VarChar(20)
+  amount      Decimal   @db.Decimal(10, 2)
+  method      String    @db.VarChar(50)
+  paidAt      DateTime? @db.DateTime(0)
+  paymentId   Int?
+  userId      Int
+  createdAt   DateTime  @default(now()) @db.DateTime(0)
+  updatedAt   DateTime  @default(now()) @db.DateTime(0)
+  Payment     Payment?  @relation(fields: [paymentId], references: [paymentId], onUpdate: NoAction, map: "FK_Transaction_Payment")
+  User        User      @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "FK_Transaction_User")
+
+  @@index([paymentId], map: "IDX_paymentId")
+  @@index([userId], map: "IDX_userId")
 }
