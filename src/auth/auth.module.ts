@@ -7,6 +7,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './passport/local.strategy';
 import { JwtStrategy } from './passport/jwt.strategy';
+import { TransformInterceptor } from './core/transform.interceptor';
+import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 
 
 @Module({
@@ -30,6 +32,12 @@ import { JwtStrategy } from './passport/jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    Reflector,
+    TransformInterceptor,
+  ],
 })
 export class AuthModule { }
