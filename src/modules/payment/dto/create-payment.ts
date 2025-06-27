@@ -11,25 +11,24 @@ export class ItemCartType {
   @IsDefined()
   @IsNumber()
   courseId: number;
-
-  @IsDefined()
-  @ValidateIf((obj: ItemCartType) => obj.couponId !== null)
-  @IsNumber()
-  couponId: number | null;
 }
 
 export class PaymentCreateDto {
-  @IsNumber()
-  userId: number;
-
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ItemCartType)
   itemCart: ItemCartType[];
 
   @IsNumber()
-  totalPrice: number;
+  originalPrice: number;
 
   @IsNumber()
-  final_price: number;
+  totalPrice: number;
+
+  @ValidateIf((o: PaymentCreateDto) => o.couponId !== null)
+  @IsNumber()
+  couponId: number | null;
+
+  @IsNumber()
+  finalPrice: number;
 }

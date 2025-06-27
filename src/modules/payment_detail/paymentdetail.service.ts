@@ -11,7 +11,7 @@ export class PaymentDetailService {
   async getTotalPriceOfOnePayment(
     paymentId: number,
     tx?: Prisma.TransactionClient
-  ): Promise<{ totalPrice: Decimal; final_price: Decimal }> {
+  ): Promise<{ originalPrice: Decimal; totalPrice: Decimal }> {
     try {
       if (!paymentId) throw new BadRequestException(`paymentId is required!`);
       const client = tx ?? this.prisma;
@@ -20,8 +20,8 @@ export class PaymentDetailService {
         _sum: { price: true, final_price: true }
       });
       return {
-        totalPrice: figure._sum?.price ?? new Decimal(0),
-        final_price: figure._sum?.final_price ?? new Decimal(0)
+        originalPrice: figure._sum?.price ?? new Decimal(0),
+        totalPrice: figure._sum?.final_price ?? new Decimal(0)
       };
     } catch (e) {
       throw new BadRequestException(`
