@@ -15,28 +15,80 @@ export class QuestionService {
   ) {
     return this.prisma.question.findMany({
       where: {
-        Lecture: {
-          Section: {
-            courseId: courseId
-          }
-        },
-        ...(search.trim().length > 0 && {
-          OR: Array.from(new Set(search.split(' '))).flatMap((word) => [
-            {
-              questionTitle: {
-                contains: word
-              }
-            },
-            {
-              questionContent: {
-                contains: word
+        AND: [
+          {
+            Lecture: {
+              Section: {
+                courseId: courseId
               }
             }
-          ])
-        }),
-        OR: [
-          ...(isUser ? [{ userId: userId }] : []),
-          ...(isNone ? [{ Answer: {} }] : [])
+          },
+          {
+            OR: [
+              ...(isUser ? [{ userId: userId }] : []),
+              ...(isNone ? [{ Answer: { none: {} } }] : [])
+            ]
+          },
+          {
+            ...(search.trim().length > 0 && {
+              OR: Array.from(new Set(search.split(' '))).flatMap((word) => [
+                {
+                  questionTitle: {
+                    contains: word
+                  }
+                },
+                {
+                  questionContent: {
+                    contains: word
+                  }
+                }
+              ])
+            })
+          }
+        ]
+      },
+      orderBy: {
+        createdAt: orderBy ? 'desc' : 'asc'
+      }
+    });
+  }
+
+  async getQuestionsLecture(
+    lectureId: number,
+    orderBy: boolean = true,
+    search: string = '',
+    userId: number,
+    isUser: boolean = false,
+    isNone: boolean = false
+  ) {
+    return this.prisma.question.findMany({
+      where: {
+        AND: [
+          {
+            lectureId: lectureId
+          },
+          {
+            OR: [
+              ...(isUser ? [{ userId: userId }] : []),
+              ...(isNone ? [{ Answer: { none: {} } }] : [])
+            ]
+          },
+          {
+            ...(search.trim().length > 0 && {
+              OR: Array.from(new Set(search.split(' '))).flatMap((word) => [
+                {
+                  questionTitle: {
+                    contains: word
+                  }
+                },
+                {
+                  questionContent: {
+                    contains: word
+                  }
+                }
+              ])
+            })
+          }
         ]
       },
       orderBy: {
