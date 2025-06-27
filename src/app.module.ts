@@ -27,6 +27,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { StudyProgressModule } from './modules/study-progress/study-progress.module';
 import { EnrollmentModule } from './modules/enrollment/enrollment.module';
 import { NoteModule } from './modules/note/note.module';
+import { PaymentTransacyionModule } from './modules/payment_transaction/paymenttransaction.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { NoteModule } from './modules/note/note.module';
     CouponModule,
     CouponCourseModule,
     UserCouponModule,
+    PaymentTransacyionModule,
     CloudinaryModule,
     StudyProgressModule,
     EnrollmentModule,
