@@ -256,8 +256,10 @@ model Question {
   questionContent String?   @db.Text
   Answer          Answer[]
   Lecture         Lecture?  @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_Lecture")
+  User            User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_User")
 
   @@index([lectureId], map: "fk_Question_Lecture")
+  @@index([userId], map: "fk_Question_User")
 }
 
 model Report {
@@ -338,6 +340,7 @@ model User {
   NotificationReceiver                 NotificationReceiver[]
   Payment                              Payment[]
   PaymentTransaction                   PaymentTransaction[]
+  Question                             Question[]
   Report                               Report[]
   Review                               Review[]
   StudyProgress                        StudyProgress[]

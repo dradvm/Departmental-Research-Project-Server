@@ -1,17 +1,19 @@
-import { Controller, Post, UseGuards, Req, Body, Get } from '@nestjs/common';
+import { Controller, Post, UseGuards, Req, Body, Get, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request } from 'express';
 import { LocalAuthGuard } from './passport/local-auth.guard';
 import { Public, ResponseMessage } from 'src/decorator/customize';
-import { CodeAuthDto, CreateAuthDto } from './dto/create-auth.dto';
+import { ChangePasswordAuthDto, CodeAuthDto, CreateAuthDto } from './dto/create-auth.dto';
 import { MailerService } from '@nestjs-modules/mailer';
+import { TransformInterceptor } from './core/transform.interceptor';
 
+@UseInterceptors(TransformInterceptor)
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly mailerService: MailerService
-  ) {}
+  ) { }
 
   @Post('login')
   @Public()
@@ -40,6 +42,18 @@ export class AuthController {
     return this.authService.retryActive(email);
   }
 
+  @Post('retry-password')
+  @Public()
+  retryPassword(@Body('email') email: string) {
+    return this.authService.retryPassword(email);
+  }
+
+  @Post('change-password')
+  @Public()
+  changePassword(@Body() data: ChangePasswordAuthDto) {
+    return this.authService.changePassword(data);
+  }
+
   @Get('mail')
   @Public()
   testMail() {
@@ -56,16 +70,5 @@ export class AuthController {
     return 'ok';
   }
 
-  @Get('test-axios')
-  @Public()
-  @ResponseMessage('test axios')
-  testAxios(@Req() req: Request) {
-    const authHeader = req.headers['authorization'];
-    console.log('>>> Received token:', authHeader); // ✅ kiểm tra tại đây
 
-    return {
-      receivedToken: authHeader || null,
-      message: 'Token received on server.'
-    };
-  }
 }

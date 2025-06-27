@@ -28,3 +28,17 @@ export class CodeAuthDto {
     @IsNotEmpty({ message: "Code không được để trống" })
     code: string;
 }
+
+export class ChangePasswordAuthDto {
+    @IsNotEmpty({ message: "Code không được để trống" })
+    code: string;
+
+    @IsNotEmpty({ message: "Password không được để trống" })
+    password: string;
+
+    @IsNotEmpty({ message: "ConfirmPassword không được để trống" })
+    confirmPassword: string;
+
+    @IsNotEmpty({ message: "Email không được để trống" })
+    email: string;
+}

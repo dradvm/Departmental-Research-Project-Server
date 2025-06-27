@@ -8,21 +8,61 @@ import {
   Delete,
   Query,
   ParseIntPipe,
-  BadRequestException
+  BadRequestException,
+  UseInterceptors,
+  UploadedFile,
+  Req,
+  UseGuards
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Public } from 'src/decorator/customize';
+import { TransformInterceptor } from 'src/auth/core/transform.interceptor';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from 'src/decorator/role.decorator';
+import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
 
+@UseInterceptors(TransformInterceptor)
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly cloudinary: CloudinaryService,
+  ) { }
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @Post('update-profile')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateProfile(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+    @Body() body: { name: string; biography: string }
+  ) {
+    const img = file
+      ? (await this.cloudinary.uploadImage(file, 'avatars')).secure_url
+      : undefined
+
+    await this.usersService.updateProfile(req.user.userId, {
+      name: body.name,
+      biography: body.biography,
+      img,
+    })
+
+    return {
+      message: 'Profile updated successfully',
+      image: img,
+    }
+  }
+
 
   @Get()
   @Public()
