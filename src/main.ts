@@ -4,10 +4,11 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as express from 'express';
+import * as morgan from 'morgan';
 import { ExpressAdapter } from '@nestjs/platform-express';
 async function bootstrap() {
   const server = express();
-  server.use('/api/test/webhook', express.raw({ type: 'application/json' }));
+  server.use('/api/webhook/stripe', express.raw({ type: 'application/json' }));
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   const config = new DocumentBuilder()
     .setTitle('API tài liệu')
@@ -33,15 +34,13 @@ async function bootstrap() {
   );
 
   //config cors
-  app.enableCors(
-    {
-      "origin": true,
-      "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-      "preflightContinue": false,
-      credentials: true
-    }
-  );
-
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
+    credentials: true
+  });
+  app.use(morgan('dev'));
   await app.listen(3001);
 }
 bootstrap();
