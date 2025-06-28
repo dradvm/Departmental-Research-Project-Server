@@ -8,7 +8,7 @@ import * as morgan from 'morgan';
 import { ExpressAdapter } from '@nestjs/platform-express';
 async function bootstrap() {
   const server = express();
-  server.use('/api/test/webhook', express.raw({ type: 'application/json' }));
+  server.use('/api/webhook/stripe', express.raw({ type: 'application/json' }));
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   const config = new DocumentBuilder()
     .setTitle('API tài liệu')

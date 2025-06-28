@@ -1,37 +1,64 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards
+} from '@nestjs/common';
 import { CartCreateDto } from './dto/create-cart';
 import { Cart } from '@prisma/client';
 import { CartService } from './cart.service';
+import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
+import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
+import { CartOutputDto } from './dto/output-cart';
 
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  async addCourse(@Body() data: CartCreateDto): Promise<Cart | null> {
+  async addCourse(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { courseId: number }
+  ): Promise<Cart | null> {
+    const data: CartCreateDto = {
+      userId: req.user.userId,
+      courseId: body.courseId
+    };
     return await this.cartService.addCourseIntoCart(data);
   }
 
-  @Get('/user/:userId')
-  async getAllCourseInCart(@Param('userId') userId: string): Promise<any> {
-    return await this.cartService.getAllCourseInCart(parseInt(userId));
+  @UseGuards(JwtAuthGuard)
+  @Get('')
+  async getAllCourseInCart(
+    @Req() req: AuthenticatedRequest,
+    @Query('code') code?: string
+  ): Promise<CartOutputDto> {
+    return await this.cartService.getAllCourseInCart(req.user.userId, code);
   }
 
-  @Delete('/user/:userId/course/:courseId')
+  @UseGuards(JwtAuthGuard)
+  @Delete('/:courseId')
   async deleteOneCourseFromCart(
-    @Param('userId') userId: string,
+    @Req() req: AuthenticatedRequest,
     @Param('courseId') courseId: string
   ): Promise<Cart> {
     return await this.cartService.removeOneCourseFromCart(
-      parseInt(userId),
+      req.user.userId,
       parseInt(courseId)
     );
   }
 
-  @Delete('/user/:userId')
+  @UseGuards(JwtAuthGuard)
+  @Delete('/delete/all/')
   async deleteCartOfUser(
-    @Param('userId') userId: string
+    @Req() req: AuthenticatedRequest
   ): Promise<{ count: number }> {
-    return this.cartService.removeAllCourseOfCart(parseInt(userId));
+    return this.cartService.removeAllCourseOfCart(req.user.userId);
   }
 }

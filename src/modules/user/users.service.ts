@@ -5,10 +5,17 @@ import { hashPasswordHelper } from 'src/helpers/util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import aqp from 'api-query-params';
 import { isValidId } from 'src/helpers/validate-id.util';
-import { CodeAuthDto, CreateAuthDto } from 'src/auth/dto/create-auth.dto';
+import { ChangePasswordAuthDto, CodeAuthDto, CreateAuthDto } from 'src/auth/dto/create-auth.dto';
 import { v4 as uuidv4 } from 'uuid';
 import * as dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
+
+interface UpdateProfileDto {
+  name: string
+  biography: string
+  img?: string
+}
+
 
 
 @Injectable()
@@ -98,6 +105,20 @@ export class UsersService {
   //     throw new InternalServerErrorException('Không thể tạo user');
   //   }
   // }
+
+
+
+  async updateProfile(userId: number, data: UpdateProfileDto) {
+    return this.prisma.user.update({
+      where: { userId },
+      data: {
+        name: data.name,
+        biography: data.biography,
+        ...(data.img && { img: data.img }),
+      },
+    })
+  }
+
 
   async create(createUserDto: CreateUserDto) {
     try {
@@ -437,5 +458,64 @@ export class UsersService {
       }
     })
     return { id: user?.userId };
+  }
+
+  async retryPassword(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email }
+    })
+    if (!user) {
+      throw new BadRequestException("Tài khoản không tồn tại")
+    }
+
+    //update user
+    const codeId = uuidv4();
+    await this.prisma.user.update({
+      where: { email },
+      data: {
+        codeId: codeId,
+        codeExpired: dayjs().add(5, 'minutes').toDate(),
+      }
+    })
+    //send mail
+    this.mailerService.sendMail({
+      to: user.email ?? undefined, // list of receivers
+      subject: 'Change your password account at @EduMarket', // Subject line
+      template: "register.hbs", //file html
+      context: {
+        name: user.name,
+        activationCode: codeId
+      }
+    })
+    return { id: user?.userId, email: user?.email };
+  }
+
+  async changePassword(data: ChangePasswordAuthDto) {
+    if (data.confirmPassword !== data.password) {
+      throw new BadRequestException("Mật khẩu và xác nhận mật khẩu không chính xác")
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: data.email }
+    })
+    if (!user) {
+      throw new BadRequestException("Tài khoản không tồn tại")
+    }
+
+    //check expire code
+    const isBeforeCheck = dayjs().isBefore(user.codeExpired);
+    if (isBeforeCheck) {
+      //valid => update password
+      const newPassword = await hashPasswordHelper(data.password)
+      await this.prisma.user.update({
+        where: { email: data.email },
+        data: {
+          password: newPassword
+        }
+      })
+      return { isBeforeCheck };
+    } else {
+      throw new BadRequestException("Mã code không hợp lệ hoặc đã hết hạn")
+    }
   }
 }

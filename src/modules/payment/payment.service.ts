@@ -14,6 +14,7 @@ import { CouponCourseService } from '../coupon_course/couponcourse.service';
 import { CouponService } from '../coupon/coupon.service';
 import { CartService } from '../cart/cart.service';
 import { PaymentDetailService } from '../payment_detail/paymentdetail.service';
+import { PaymentOutputDto } from './dto/output-payment';
 
 @Injectable()
 export class PaymentService {
@@ -25,7 +26,10 @@ export class PaymentService {
     private readonly paymentDetailService: PaymentDetailService
   ) {}
 
-  async addOnePayment(data: PaymentCreateDto): Promise<Payment | null> {
+  async addOnePayment(
+    data: PaymentCreateDto,
+    userId: number
+  ): Promise<Payment | null> {
     return await this.prisma.$transaction(async (tx) => {
       // check if cart is empty
       if (!data.itemCart.length)
@@ -35,10 +39,11 @@ export class PaymentService {
       // create inital payment with userId and timePayment
       const payment = await tx.payment.create({
         data: {
-          userId: data.userId,
+          userId: userId,
           couponId: null,
+          originalPrice: Decimal(data.originalPrice),
           totalPrice: Decimal(data.totalPrice),
-          final_price: Decimal(data.final_price),
+          final_price: Decimal(data.totalPrice),
           timePayment: new Date()
         }
       });
@@ -142,34 +147,87 @@ export class PaymentService {
           );
         console.log(savedPaymentDetail);
       }
-      // calculate totalPrice and final_price in DB
-      const figure: { totalPrice: Decimal; final_price: Decimal } =
+      // calculate originalPrice and totalPrice in DB
+      const figure: { originalPrice: Decimal; totalPrice: Decimal } =
         await this.paymentDetailService.getTotalPriceOfOnePayment(
           payment.paymentId,
           tx
         );
-      // compare them with totalPrice and final_price from FE
+
+      // apply global coupon
+      if (data.couponId) {
+        const globalCoupon: Coupon | null =
+          await this.couponService.getCouponById(data.couponId);
+        if (globalCoupon) {
+          // handle for final price
+          let savingAmount = new Decimal(0);
+          // check if coupon is valid: time and quantity
+          const now = new Date();
+          if (
+            globalCoupon.startDate < now &&
+            now < globalCoupon.endDate &&
+            globalCoupon.appliedAmount < globalCoupon.quantity &&
+            globalCoupon.minRequire.lte(figure.totalPrice)
+          ) {
+            // discount: %
+            if (globalCoupon.type === 'discount')
+              savingAmount = figure.totalPrice
+                .mul(globalCoupon.value)
+                .div(new Decimal(100));
+            // voucher
+            else if (globalCoupon.type === 'voucher')
+              savingAmount = globalCoupon.value;
+
+            if (savingAmount.gt(globalCoupon.maxValueDiscount))
+              savingAmount = globalCoupon.maxValueDiscount;
+
+            // applied globalCoupon => increase appliedAmount
+            await tx.coupon.update({
+              where: { couponId: globalCoupon.couponId },
+              data: {
+                appliedAmount: globalCoupon.appliedAmount + 1
+              }
+            });
+            payment.couponId = globalCoupon.couponId;
+            payment.final_price = payment.final_price.sub(savingAmount);
+            if (payment.final_price.lt(0)) payment.final_price = new Decimal(0);
+          }
+        }
+      }
+      // compare them with totalPrice and totalPrice and finalPrice from FE
       console.log(
-        `FE: totalPrice: ${data.totalPrice}; final_price: ${data.final_price}`
+        `FE: originalPrice: ${data.originalPrice} totalPrice: ${data.totalPrice}; final_price: ${data.finalPrice}`
       );
       console.log(
-        `BE: totalPrice: ${figure.totalPrice.toString()}; final_price: ${figure.final_price.toString()}`
+        `BE: originalPrice: ${figure.originalPrice.toString()} totalPrice: ${figure.totalPrice.toString()}; final_price: ${payment.final_price.toString()}`
       );
       if (
+        !figure.originalPrice.equals(new Decimal(data.originalPrice)) ||
         !figure.totalPrice.equals(new Decimal(data.totalPrice)) ||
-        !figure.final_price.equals(new Decimal(data.final_price))
+        !payment.final_price.equals(new Decimal(data.finalPrice))
       )
         throw new BadRequestException(
-          `totalPrice and final_price are different between FE and BE`
+          `totalPrice and final_price and originalPrice are different between FE and BE`
         );
-      return payment;
+      return await tx.payment.update({
+        where: {
+          paymentId: payment.paymentId
+        },
+        data: payment
+      });
     });
   }
 
-  async getAllPayment(userId?: number): Promise<any[]> {
+  async getAllPayment(
+    limit: number,
+    skip: number,
+    userId?: number
+  ): Promise<PaymentOutputDto[]> {
     try {
       const data = await this.prisma.payment.findMany({
         where: userId ? { userId } : {},
+        skip: skip,
+        take: limit,
         include: {
           PaymentDetail: {
             include: {
@@ -181,16 +239,17 @@ export class PaymentService {
       });
       const result = data.map((da) => {
         return {
-          paymentId: da.paymentId,
-          timePayment: da.timePayment,
-          totalPrice: da.totalPrice,
-          userId: da.userId,
-          userName: da.User?.name,
-          courseAmount: da.PaymentDetail.length,
-          PaymentDetail: da.PaymentDetail.map((pay) => ({
-            courseId: pay.courseId,
-            price: pay.price,
-            originalPrice: pay.Course.price,
+          paymentId: da.paymentId.toString(),
+          timePayment: da.timePayment.toISOString(),
+          totalPrice: da.totalPrice.toString(),
+          couponId: da.couponId ? da.couponId?.toString() : null,
+          final_price: da.final_price.toString(),
+          userId: da.userId.toString(),
+          userName: da.User?.name ?? null,
+          paymentDetail: da.PaymentDetail.map((pay) => ({
+            courseId: pay.courseId.toString(),
+            price: pay.price.toString(),
+            final_price: pay.final_price.toString(),
             courseTitle: pay.Course.title,
             courseThumbnail: pay.Course.thumbnail
           }))
@@ -200,20 +259,5 @@ export class PaymentService {
     } catch (e) {
       throw new BadRequestException(`Can not get all payment: ${e}`);
     }
-  }
-
-  async getPaymentCountAndCost(userId?: number): Promise<{
-    totalPrice: number;
-    paymentCount: number;
-  }> {
-    const data = await this.prisma.payment.aggregate({
-      where: userId ? { userId } : {},
-      _sum: { totalPrice: true },
-      _count: true
-    });
-    return {
-      totalPrice: Number(data._sum.totalPrice ?? 0),
-      paymentCount: data._count
-    };
   }
 }
