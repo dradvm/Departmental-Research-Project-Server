@@ -32,3 +32,8 @@ export class PaymentCreateDto {
   @IsNumber()
   finalPrice: number;
 }
+
+export class PaymentIntentCreateDto {
+  @IsNumber()
+  amount: number;
+}
