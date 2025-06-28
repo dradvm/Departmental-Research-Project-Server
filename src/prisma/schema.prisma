@@ -10,10 +10,10 @@ datasource db {
 model Answer {
   answerId      Int       @id @default(autoincrement())
   userId        Int?
-  contentAnswer String?   @db.Text
   questionId    Int?
   createdAt     DateTime? @default(now()) @db.DateTime(0)
   updatedAt     DateTime? @default(now()) @db.DateTime(0)
+  answerContent String?   @db.Text
   Question      Question? @relation(fields: [questionId], references: [questionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_Question")
   User          User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_User")
 
@@ -215,17 +215,16 @@ model NotificationReceiver {
 }
 
 model Payment {
-  paymentId          Int                  @id @default(autoincrement())
-  timePayment        DateTime             @db.DateTime(0)
-  totalPrice         Decimal              @db.Decimal(10, 2)
-  userId             Int
-  couponId           Int?
-  final_price        Decimal              @default(0.00) @db.Decimal(10, 2)
-  originalPrice      Decimal              @default(0.00) @db.Decimal(10, 2)
-  User               User                 @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
-  Coupon             Coupon?              @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_coupon")
-  PaymentDetail      PaymentDetail[]
-  PaymentTransaction PaymentTransaction[]
+  paymentId     Int             @id @default(autoincrement())
+  timePayment   DateTime        @db.DateTime(0)
+  totalPrice    Decimal         @db.Decimal(10, 2)
+  userId        Int
+  couponId      Int?
+  final_price   Decimal         @default(0.00) @db.Decimal(10, 2)
+  originalPrice Decimal         @default(0.00) @db.Decimal(10, 2)
+  User          User            @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
+  Coupon        Coupon?         @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_coupon")
+  PaymentDetail PaymentDetail[]
 
   @@index([userId], map: "fk_Payment_User")
   @@index([couponId], map: "fk_payment_coupon")
@@ -339,7 +338,6 @@ model User {
   Notification                         Notification[]
   NotificationReceiver                 NotificationReceiver[]
   Payment                              Payment[]
-  PaymentTransaction                   PaymentTransaction[]
   Question                             Question[]
   Report                               Report[]
   Review                               Review[]
@@ -403,23 +401,4 @@ model LastLectureStudy {
   @@id([userId, courseId])
   @@index([lectureId], map: "fk_LastLectureStudy_Lecture")
   @@index([courseId], map: "fk_LastLectureStudy_Course")
-}
-
-model PaymentTransaction {
-  id          Int       @id @default(autoincrement())
-  provider    String    @db.VarChar(50)
-  providerRef String    @unique(map: "UK_providerRef") @db.VarChar(255)
-  status      String    @db.VarChar(20)
-  amount      Decimal   @db.Decimal(10, 2)
-  method      String    @db.VarChar(50)
-  paidAt      DateTime? @db.DateTime(0)
-  paymentId   Int?
-  userId      Int
-  createdAt   DateTime  @default(now()) @db.DateTime(0)
-  updatedAt   DateTime  @default(now()) @db.DateTime(0)
-  Payment     Payment?  @relation(fields: [paymentId], references: [paymentId], onUpdate: NoAction, map: "FK_Transaction_Payment")
-  User        User      @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "FK_Transaction_User")
-
-  @@index([paymentId], map: "IDX_paymentId")
-  @@index([userId], map: "IDX_userId")
 }

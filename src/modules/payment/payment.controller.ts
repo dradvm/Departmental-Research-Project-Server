@@ -7,15 +7,32 @@ import {
   Req,
   UseGuards
 } from '@nestjs/common';
-import { PaymentCreateDto } from './dto/create-payment';
+import { PaymentCreateDto, PaymentIntentCreateDto } from './dto/create-payment';
 import { Payment } from '@prisma/client';
 import { PaymentService } from './payment.service';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
 import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
+import { StripeService } from '../stripe/stripe.service';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(
+    private readonly paymentService: PaymentService,
+    private readonly stripeService: StripeService
+  ) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/create-intent')
+  async createPaymentTransaction(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: PaymentIntentCreateDto
+  ): Promise<{ clientSecret: string }> {
+    const userId: number = req.user.userId;
+    return await this.stripeService.createTransactionIntent(
+      body.amount,
+      userId
+    );
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post()

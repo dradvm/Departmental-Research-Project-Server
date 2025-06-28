@@ -15,6 +15,7 @@ import { CouponService } from '../coupon/coupon.service';
 import { CartService } from '../cart/cart.service';
 import { PaymentDetailService } from '../payment_detail/paymentdetail.service';
 import { PaymentOutputDto } from './dto/output-payment';
+import { getFinalPrice } from 'src/helpers/calculate-discount-amount';
 
 @Injectable()
 export class PaymentService {
@@ -95,29 +96,15 @@ export class PaymentService {
         const coupon: Coupon | null = couponcourse
           ? await this.couponService.getCouponById(couponcourse.couponId, tx)
           : null;
-
         if (coupon) {
-          // handle for final price
-          let savingAmount = new Decimal(0);
-          // check if coupon is valid: time and quantity
-          const now = new Date();
-          if (
-            coupon.startDate < now &&
-            now < coupon.endDate &&
-            coupon.appliedAmount < coupon.quantity &&
-            coupon.minRequire.lte(course.price)
-          ) {
-            // discount: %
-            if (coupon.type === 'discount')
-              savingAmount = paymentDetail.price
-                .mul(coupon.value)
-                .div(new Decimal(100));
-            // voucher
-            else if (coupon.type === 'voucher') savingAmount = coupon.value;
-
-            if (savingAmount.gt(coupon.maxValueDiscount))
-              savingAmount = coupon.maxValueDiscount;
-
+          const finalPiceOfCourse: Decimal = getFinalPrice(
+            coupon,
+            paymentDetail.price,
+            false
+          );
+          if (!paymentDetail.price.equals(finalPiceOfCourse)) {
+            paymentDetail.couponId = coupon.couponId;
+            paymentDetail.final_price = finalPiceOfCourse;
             // applied coupon => increase appliedAmount
             await tx.coupon.update({
               where: { couponId: coupon.couponId },
@@ -126,14 +113,9 @@ export class PaymentService {
               }
             });
           }
-          paymentDetail.couponId = coupon.couponId;
-          paymentDetail.final_price = paymentDetail.price.sub(savingAmount);
-          if (paymentDetail.final_price.lt(0))
-            paymentDetail.final_price = new Decimal(0);
         }
-        const savedPaymentDetail: PaymentDetail = await tx.paymentDetail.create(
-          { data: paymentDetail }
-        );
+        // create paymentDetial
+        await tx.paymentDetail.create({ data: paymentDetail });
         // delete course from cart
         const deleteItemFormCart: Cart =
           await this.cartService.removeOneCourseFromCart(
@@ -145,7 +127,6 @@ export class PaymentService {
           throw new BadRequestException(
             `Can not remove course ${course.courseId} from cart of user ${payment.userId}`
           );
-        console.log(savedPaymentDetail);
       }
       // calculate originalPrice and totalPrice in DB
       const figure: { originalPrice: Decimal; totalPrice: Decimal } =
@@ -159,28 +140,14 @@ export class PaymentService {
         const globalCoupon: Coupon | null =
           await this.couponService.getCouponById(data.couponId);
         if (globalCoupon) {
-          // handle for final price
-          let savingAmount = new Decimal(0);
-          // check if coupon is valid: time and quantity
-          const now = new Date();
-          if (
-            globalCoupon.startDate < now &&
-            now < globalCoupon.endDate &&
-            globalCoupon.appliedAmount < globalCoupon.quantity &&
-            globalCoupon.minRequire.lte(figure.totalPrice)
-          ) {
-            // discount: %
-            if (globalCoupon.type === 'discount')
-              savingAmount = figure.totalPrice
-                .mul(globalCoupon.value)
-                .div(new Decimal(100));
-            // voucher
-            else if (globalCoupon.type === 'voucher')
-              savingAmount = globalCoupon.value;
-
-            if (savingAmount.gt(globalCoupon.maxValueDiscount))
-              savingAmount = globalCoupon.maxValueDiscount;
-
+          const finalPriceOfCart: Decimal = getFinalPrice(
+            globalCoupon,
+            figure.totalPrice,
+            true
+          );
+          if (!finalPriceOfCart.equals(figure.totalPrice)) {
+            payment.couponId = globalCoupon.couponId;
+            payment.final_price = finalPriceOfCart;
             // applied globalCoupon => increase appliedAmount
             await tx.coupon.update({
               where: { couponId: globalCoupon.couponId },
@@ -188,19 +155,10 @@ export class PaymentService {
                 appliedAmount: globalCoupon.appliedAmount + 1
               }
             });
-            payment.couponId = globalCoupon.couponId;
-            payment.final_price = payment.final_price.sub(savingAmount);
-            if (payment.final_price.lt(0)) payment.final_price = new Decimal(0);
           }
         }
       }
       // compare them with totalPrice and totalPrice and finalPrice from FE
-      console.log(
-        `FE: originalPrice: ${data.originalPrice} totalPrice: ${data.totalPrice}; final_price: ${data.finalPrice}`
-      );
-      console.log(
-        `BE: originalPrice: ${figure.originalPrice.toString()} totalPrice: ${figure.totalPrice.toString()}; final_price: ${payment.final_price.toString()}`
-      );
       if (
         !figure.originalPrice.equals(new Decimal(data.originalPrice)) ||
         !figure.totalPrice.equals(new Decimal(data.totalPrice)) ||
