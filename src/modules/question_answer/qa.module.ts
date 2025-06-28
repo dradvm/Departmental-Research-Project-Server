@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { QuestionController } from './question.controller';
-import { AnswerController } from './answer.controller';
+import { QAController } from './qa.controller';
 import { QuestionService } from './question.service';
 import { AnswerService } from './answer.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [QuestionController, AnswerController],
+  imports: [PrismaModule, CloudinaryModule],
+  controllers: [QAController],
   providers: [QuestionService, AnswerService],
   exports: [QuestionService, AnswerService]
 })
