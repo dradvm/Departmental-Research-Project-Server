@@ -8,14 +8,15 @@ datasource db {
 }
 
 model Answer {
-  answerId      Int       @id @default(autoincrement())
+  answerId      Int           @id @default(autoincrement())
   userId        Int?
   questionId    Int?
-  createdAt     DateTime? @default(now()) @db.DateTime(0)
-  updatedAt     DateTime? @default(now()) @db.DateTime(0)
-  answerContent String?   @db.Text
-  Question      Question? @relation(fields: [questionId], references: [questionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_Question")
-  User          User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_User")
+  createdAt     DateTime?     @default(now()) @db.DateTime(0)
+  updatedAt     DateTime?     @default(now()) @db.DateTime(0)
+  answerContent String?       @db.Text
+  Question      Question?     @relation(fields: [questionId], references: [questionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_Question")
+  User          User?         @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Answer_User")
+  AnswerImage   AnswerImage[]
 
   @@index([userId], map: "fk_Answer_User")
   @@index([questionId], map: "fk_Answer_Question")
@@ -246,16 +247,17 @@ model PaymentDetail {
 }
 
 model Question {
-  questionId      Int       @id @default(autoincrement())
+  questionId      Int             @id @default(autoincrement())
   userId          Int?
   lectureId       Int?
-  createdAt       DateTime? @default(now()) @db.DateTime(0)
-  updatedAt       DateTime? @default(now()) @db.DateTime(0)
-  questionTitle   String    @db.Text
-  questionContent String?   @db.Text
+  createdAt       DateTime?       @default(now()) @db.DateTime(0)
+  updatedAt       DateTime?       @default(now()) @db.DateTime(0)
+  questionTitle   String          @db.Text
+  questionContent String?         @db.Text
   Answer          Answer[]
-  Lecture         Lecture?  @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_Lecture")
-  User            User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_User")
+  Lecture         Lecture?        @relation(fields: [lectureId], references: [lectureId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_Lecture")
+  User            User?           @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Question_User")
+  QuestionImage   QuestionImage[]
 
   @@index([lectureId], map: "fk_Question_Lecture")
   @@index([userId], map: "fk_Question_User")
@@ -401,4 +403,22 @@ model LastLectureStudy {
   @@id([userId, courseId])
   @@index([lectureId], map: "fk_LastLectureStudy_Lecture")
   @@index([courseId], map: "fk_LastLectureStudy_Course")
+}
+
+model AnswerImage {
+  answerId  Int
+  publicId  String @unique(map: "publicId") @db.VarChar(190)
+  secureUrl String @db.Text
+  Answer    Answer @relation(fields: [answerId], references: [answerId], onDelete: NoAction, onUpdate: NoAction, map: "AnswerImage_ibfk_1")
+
+  @@id([answerId, publicId])
+}
+
+model QuestionImage {
+  questionId Int
+  publicId   String   @unique(map: "publicId") @db.VarChar(190)
+  secureUrl  String   @db.Text
+  Question   Question @relation(fields: [questionId], references: [questionId], onDelete: NoAction, onUpdate: NoAction, map: "QuestionImage_ibfk_1")
+
+  @@id([questionId, publicId])
 }

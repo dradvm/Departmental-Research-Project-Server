@@ -2,10 +2,12 @@ import { CloudinaryService } from './../cloudinary/cloudinary.service';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseBoolPipe,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   Req,
@@ -15,7 +17,7 @@ import {
 import { QuestionService } from './question.service';
 import { ApiRequestData } from 'src/common/base/api.request';
 import { AnswerService } from './answer.service';
-import { CreateQuestionDTO } from './dto/question';
+import { CreateQuestionDTO, UpdateQuestionDTO } from './dto/question';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('questions')
@@ -113,12 +115,25 @@ export class QAController {
 
   @Post('')
   @UseInterceptors(FilesInterceptor('images'))
-  addQuestion(
+  async addQuestion(
     @Req() req: ApiRequestData,
     @Body() body: CreateQuestionDTO,
     @UploadedFiles() files?: Express.Multer.File[]
   ) {
-    console.log(files);
+    return this.questionService.addQuestion(req.user.userId, body, files);
+  }
+  @Patch('')
+  @UseInterceptors(FilesInterceptor('images'))
+  updateQuestion(
+    @Req() req: ApiRequestData,
+    @Body() body: UpdateQuestionDTO,
+    @UploadedFiles() files?: Express.Multer.File[]
+  ) {
+    return this.questionService.updateQuestion(body, files);
+  }
+
+  @Delete('')
+  async deleteQuestion() {
     return {};
   }
 }
