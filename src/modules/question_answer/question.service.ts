@@ -3,12 +3,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateQuestionDTO, UpdateQuestionDTO } from './dto/question';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ImageCloudinary } from '../cloudinary/types/cloudinary-response';
+import { AnswerService } from './answer.service';
 
 @Injectable()
 export class QuestionService {
   constructor(
     private prisma: PrismaService,
-    private cloudinaryService: CloudinaryService
+    private cloudinaryService: CloudinaryService,
+    private answerService: AnswerService
   ) {}
 
   async getQuestions(
@@ -286,9 +288,6 @@ export class QuestionService {
     const deleteImages = (
       await this.getQuestionImagesNotInOldImages(oldImages, questionId)
     ).map((img) => img.publicId);
-    console.log('A');
-    console.log(oldImages);
-    console.log(deleteImages);
     await this.cloudinaryService.deleteImages(deleteImages);
   }
 
@@ -349,5 +348,30 @@ export class QuestionService {
         }
       }
     });
+  }
+  async deleteQuestion(questionId: number) {
+    const publicIds = (
+      await this.prisma.questionImage.findMany({
+        where: {
+          questionId: questionId
+        }
+      })
+    ).map((answerImage) => answerImage.publicId);
+    await Promise.all([
+      this.answerService.deleteAnswers(questionId),
+      this.cloudinaryService.deleteImages(publicIds)
+    ]);
+    return this.prisma.$transaction([
+      this.prisma.questionImage.deleteMany({
+        where: {
+          questionId: questionId
+        }
+      }),
+      this.prisma.question.delete({
+        where: {
+          questionId: questionId
+        }
+      })
+    ]);
   }
 }

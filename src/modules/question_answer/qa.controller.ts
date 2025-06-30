@@ -19,8 +19,9 @@ import { ApiRequestData } from 'src/common/base/api.request';
 import { AnswerService } from './answer.service';
 import { CreateQuestionDTO, UpdateQuestionDTO } from './dto/question';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { CreateAnswerDTO, UpdateAnswerDTO } from './dto/answer';
 
-@Controller('questions')
+@Controller('qa')
 export class QAController {
   constructor(
     private questionService: QuestionService,
@@ -28,7 +29,7 @@ export class QAController {
     private cloudinaryService: CloudinaryService
   ) {}
 
-  @Get('/:courseId')
+  @Get('questions/:courseId')
   getQuestions(
     @Param('courseId', ParseIntPipe) courseId: number,
     @Query('orderBy', ParseBoolPipe) orderBy: boolean,
@@ -49,7 +50,7 @@ export class QAController {
     );
   }
 
-  @Get('/lecture/:lectureId')
+  @Get('questions/lecture/:lectureId')
   getQuestionsLecture(
     @Param('lectureId', ParseIntPipe) lectureId: number,
     @Query('orderBy', ParseBoolPipe) orderBy: boolean,
@@ -70,7 +71,7 @@ export class QAController {
     );
   }
 
-  @Get('/total/:courseId')
+  @Get('questions/total/:courseId')
   getTotalQuestions(
     @Param('courseId', ParseIntPipe) courseId: number,
     @Query('orderBy', ParseBoolPipe) orderBy: boolean,
@@ -89,7 +90,7 @@ export class QAController {
     );
   }
 
-  @Get('/total/lecture/:lectureId')
+  @Get('questions/total/lecture/:lectureId')
   getTotalQuestionsLecture(
     @Param('lectureId', ParseIntPipe) lectureId: number,
     @Query('orderBy', ParseBoolPipe) orderBy: boolean,
@@ -108,12 +109,12 @@ export class QAController {
     );
   }
 
-  @Get(`/:questionId/answers`)
+  @Get(`questions/:questionId/answers`)
   getAnswers(@Param('questionId', ParseIntPipe) questionId: number) {
     return this.answerService.getAnswers(questionId);
   }
 
-  @Post('')
+  @Post('questions')
   @UseInterceptors(FilesInterceptor('images'))
   async addQuestion(
     @Req() req: ApiRequestData,
@@ -122,7 +123,7 @@ export class QAController {
   ) {
     return this.questionService.addQuestion(req.user.userId, body, files);
   }
-  @Patch('')
+  @Patch('questions')
   @UseInterceptors(FilesInterceptor('images'))
   updateQuestion(
     @Req() req: ApiRequestData,
@@ -132,8 +133,32 @@ export class QAController {
     return this.questionService.updateQuestion(body, files);
   }
 
-  @Delete('')
-  async deleteQuestion() {
-    return {};
+  @Delete('questions/:questionId')
+  async deleteQuestion(@Param('questionId', ParseIntPipe) questionId: number) {
+    return this.questionService.deleteQuestion(questionId);
+  }
+
+  @Post('answers')
+  @UseInterceptors(FilesInterceptor('images'))
+  async addAnswer(
+    @Req() req: ApiRequestData,
+    @Body() body: CreateAnswerDTO,
+    @UploadedFiles() files?: Express.Multer.File[]
+  ) {
+    return this.answerService.addAnswer(req.user.userId, body, files);
+  }
+  @Patch('answers')
+  @UseInterceptors(FilesInterceptor('images'))
+  updateAnswer(
+    @Req() req: ApiRequestData,
+    @Body() body: UpdateAnswerDTO,
+    @UploadedFiles() files?: Express.Multer.File[]
+  ) {
+    return this.answerService.updateAnswer(body, files);
+  }
+
+  @Delete('/answers/:answerId')
+  deleteAnswer(@Param('answerId', ParseIntPipe) answerId: number) {
+    return this.answerService.deleteAnswer(answerId);
   }
 }
