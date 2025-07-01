@@ -6,21 +6,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class StudyProgressService {
   constructor(private prisma: PrismaService) {}
 
-  async getStudyProgress(courseId: number, userId: number) {
-    return this.prisma.studyProgress.findMany({
-      where: {
-        userId: userId,
-        Lecture: {
-          Section: {
-            Course: {
-              courseId: courseId
-            }
-          }
-        }
-      }
-    });
-  }
-
   async getCourseStudyProgress(courseId: number, userId: number) {
     return this.prisma.course.findUnique({
       where: { courseId: courseId },

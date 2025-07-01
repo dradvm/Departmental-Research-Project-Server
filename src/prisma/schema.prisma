@@ -34,7 +34,7 @@ model Cart {
 
 model Category {
   categoryId     Int              @id @default(autoincrement())
-  nameCategory   String?          @db.VarChar(255)
+  categoryName   String?          @db.Text
   CourseCategory CourseCategory[]
 }
 
@@ -128,13 +128,15 @@ model CourseObjective {
 }
 
 model Enrollment {
-  userId       Int
-  courseId     Int
-  dateRegister DateTime? @db.Date
-  finishStatus Boolean?
-  progress     Decimal?  @db.Decimal(5, 2)
-  Course       Course    @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Enrollment_Course")
-  User         User      @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Enrollment_User")
+  userId         Int
+  courseId       Int
+  dateRegister   DateTime? @db.Date
+  finishStatus   Boolean?
+  progress       Decimal?  @db.Decimal(5, 2)
+  enrolledAt     DateTime? @default(now()) @db.DateTime(0)
+  lastAccessedAt DateTime? @db.DateTime(0)
+  Course         Course    @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Enrollment_Course")
+  User           User      @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Enrollment_User")
 
   @@id([userId, courseId])
   @@index([courseId], map: "fk_Enrollment_Course")
@@ -273,15 +275,15 @@ model Report {
 }
 
 model Review {
-  reviewId   Int       @id @default(autoincrement())
-  userId     Int?
-  courseId   Int?
-  rating     Int?
-  review     String?   @db.Text
-  createdAt  DateTime? @default(now()) @db.DateTime(0)
-  updated_at DateTime? @default(now()) @db.DateTime(0)
-  Course     Course?   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_Course")
-  User       User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_User")
+  reviewId  Int       @id @default(autoincrement())
+  userId    Int?
+  courseId  Int?
+  rating    Int?
+  review    String?   @db.Text
+  createdAt DateTime? @default(now()) @db.DateTime(0)
+  updatedAt DateTime? @default(now()) @db.DateTime(0)
+  Course    Course?   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_Course")
+  User      User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Review_User")
 
   @@index([courseId], map: "fk_Review_Course")
   @@index([userId], map: "fk_Review_User")
