@@ -20,14 +20,16 @@ export class EnrollmentController {
     @Query('sort') sort?: string,
     @Query('categoryId') categoryId?: number,
     @Query('progress') progress?: string,
-    @Query('instructorId') instructorId?: number
+    @Query('instructorId') instructorId?: number,
+    @Query('search') search?: string
   ) {
     return this.enrollmentService.getCourseEnrolled(
       req.user.userId,
       sort,
       categoryId,
       progress,
-      instructorId
+      instructorId,
+      search
     );
   }
   @Get('categories')

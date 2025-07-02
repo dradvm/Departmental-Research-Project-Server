@@ -10,7 +10,8 @@ export class EnrollmentService {
     sort?: string,
     categoryId?: number,
     progress?: string,
-    instructorId?: number
+    instructorId?: number,
+    search: string = ''
   ) {
     let orderTime = true;
     let orderTitle = false;
@@ -36,6 +37,47 @@ export class EnrollmentService {
         break;
       }
     }
+    let inProgress = undefined;
+
+    if (progress === 'inProgress') {
+      inProgress = true;
+    } else if (progress === 'completed') {
+      inProgress = false;
+    }
+
+    let inProgressFilter = undefined;
+    if (inProgress) {
+      inProgressFilter = {
+        some: {
+          Lecture: {
+            some: {
+              StudyProgress: {
+                some: {
+                  userId: userId,
+                  isDone: false
+                }
+              }
+            }
+          }
+        }
+      };
+    } else if (inProgress === false) {
+      inProgressFilter = {
+        every: {
+          Lecture: {
+            every: {
+              StudyProgress: {
+                some: {
+                  userId: userId,
+                  isDone: true
+                }
+              }
+            }
+          }
+        }
+      };
+    }
+
     return this.prisma.enrollment.findMany({
       where: {
         userId: userId,
@@ -43,13 +85,28 @@ export class EnrollmentService {
           User: {
             userId: instructorId
           },
+          Section: {
+            ...inProgressFilter
+          },
           CourseCategory: {
             some: {
               Category: {
                 categoryId: categoryId
               }
             }
-          }
+          },
+          AND: [
+            {
+              ...(search.trim().length > 0 && {
+                OR: Array.from(new Set(search.split(' '))).map((word) => ({
+                  title: {
+                    contains: word,
+                    not: null
+                  }
+                }))
+              })
+            }
+          ]
         }
       },
       include: {
