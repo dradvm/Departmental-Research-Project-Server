@@ -27,7 +27,7 @@ class PaymentDetailType {
 
   @IsDefined()
   @IsString()
-  final_price: string;
+  finalPrice: string;
 }
 
 export class PaymentOutputDto {
@@ -48,11 +48,18 @@ export class PaymentOutputDto {
   @IsString()
   couponId: string | null;
 
+  @ValidateIf((o: PaymentOutputDto) => o.code !== null)
+  @IsString()
+  code: string | null;
+
+  @IsString()
+  originalPrice: string;
+
   @IsString()
   totalPrice: string;
 
   @IsString()
-  final_price: string;
+  finalPrice: string;
 
   @IsDefined()
   @ValidateNested({ each: true })

@@ -179,11 +179,50 @@ export class PaymentService {
   async getAllPayment(
     limit: number,
     skip: number,
-    userId?: number
+    userId?: number,
+    startDate?: string,
+    endDate?: string,
+    minPrice?: Decimal,
+    maxPrice?: Decimal,
+    userName?: string
   ): Promise<PaymentOutputDto[]> {
     try {
+      const where = {
+        userId: userId || undefined,
+        ...(startDate || endDate
+          ? {
+              timePayment: {
+                ...(startDate && { gte: new Date(startDate) }),
+                ...(endDate && {
+                  lt: (() => {
+                    const end = new Date(endDate);
+                    end.setDate(end.getDate() + 1);
+                    return end;
+                  })()
+                })
+              }
+            }
+          : {}),
+        ...(minPrice || maxPrice
+          ? {
+              final_price: {
+                ...(minPrice && { gte: minPrice }),
+                ...(maxPrice && { lte: maxPrice })
+              }
+            }
+          : {}),
+        ...(userName
+          ? {
+              User: {
+                name: {
+                  contains: userName.toLowerCase()
+                }
+              }
+            }
+          : {})
+      };
       const data = await this.prisma.payment.findMany({
-        where: userId ? { userId } : {},
+        where: where,
         skip: skip,
         take: limit,
         include: {
@@ -192,22 +231,25 @@ export class PaymentService {
               Course: true
             }
           },
-          User: true
+          User: true,
+          Coupon: true
         }
       });
       const result = data.map((da) => {
         return {
           paymentId: da.paymentId.toString(),
           timePayment: da.timePayment.toISOString(),
+          originalPrice: da.originalPrice.toString(),
           totalPrice: da.totalPrice.toString(),
           couponId: da.couponId ? da.couponId?.toString() : null,
-          final_price: da.final_price.toString(),
+          code: da.Coupon ? da.Coupon.code : null,
+          finalPrice: da.final_price.toString(),
           userId: da.userId.toString(),
           userName: da.User?.name ?? null,
           paymentDetail: da.PaymentDetail.map((pay) => ({
             courseId: pay.courseId.toString(),
             price: pay.price.toString(),
-            final_price: pay.final_price.toString(),
+            finalPrice: pay.final_price.toString(),
             courseTitle: pay.Course.title,
             courseThumbnail: pay.Course.thumbnail
           }))

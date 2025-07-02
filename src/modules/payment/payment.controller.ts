@@ -13,6 +13,8 @@ import { PaymentService } from './payment.service';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
 import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
 import { StripeService } from '../stripe/stripe.service';
+import { Decimal } from '@prisma/client/runtime/library';
+import { PaymentOutputDto } from './dto/output-payment';
 
 @Controller('payment')
 export class PaymentController {
@@ -47,12 +49,22 @@ export class PaymentController {
   async getAllPayment(
     @Query('limit') limit: string,
     @Query('skip') skip: string,
-    @Query('userId') userId?: string
-  ): Promise<any[]> {
+    @Query('userId') userId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
+    @Query('userName') userName?: string
+  ): Promise<PaymentOutputDto[]> {
     return await this.paymentService.getAllPayment(
       parseInt(limit),
       parseInt(skip),
-      userId ? parseInt(userId) : undefined
+      userId ? parseInt(userId) : undefined,
+      startDate || undefined,
+      endDate || undefined,
+      minPrice ? new Decimal(minPrice) : undefined,
+      maxPrice ? new Decimal(maxPrice) : undefined,
+      userName || undefined
     );
   }
 }

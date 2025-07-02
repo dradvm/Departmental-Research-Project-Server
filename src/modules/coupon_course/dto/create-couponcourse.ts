@@ -1,4 +1,4 @@
-import { IsBoolean, IsNumber } from 'class-validator';
+import { IsNumber } from 'class-validator';
 
 export class CouponCourseCreateDto {
   @IsNumber()
@@ -6,10 +6,4 @@ export class CouponCourseCreateDto {
 
   @IsNumber()
   courseId: number;
-
-  @IsBoolean()
-  isAccepted: boolean;
-
-  @IsBoolean()
-  isRunning: boolean;
 }
