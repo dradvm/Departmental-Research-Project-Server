@@ -3,6 +3,7 @@ import { Coupon, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { CouponType } from 'src/enums/coupon-type.enum';
+import { getWhereOfGlobalCoupon } from 'src/helpers/value-condition-filter';
 
 @Injectable()
 export class CouponService {
@@ -100,18 +101,38 @@ export class CouponService {
     }
   }
 
-  async getAllCoupons(): Promise<Coupon[]> {
+  async getAllGlobalCoupons(
+    skip: number,
+    limit: number,
+    isGlobal: boolean,
+    startDate?: string,
+    endDate?: string,
+    minPercent?: number,
+    minPrice?: number
+  ): Promise<Coupon[]> {
     try {
-      return await this.prisma.coupon.findMany();
+      const where = getWhereOfGlobalCoupon(
+        isGlobal,
+        startDate,
+        endDate,
+        minPercent,
+        minPrice
+      );
+      return await this.prisma.coupon.findMany({
+        where: where,
+        skip: skip,
+        take: limit
+      });
     } catch (e) {
-      throw new BadRequestException(`Get all coupons failed: ${e}`);
+      throw new BadRequestException(`Get all global coupons failed: ${e}`);
     }
   }
 
-  async createCoupon(data: CreateCouponDto): Promise<Coupon> {
+  async createCoupon(userId: number, data: CreateCouponDto): Promise<Coupon> {
     try {
       const checkData: CreateCouponDto = this.getCheckedData(data);
-      return await this.prisma.coupon.create({ data: checkData });
+      const finalData = { ...checkData, userId: userId };
+      return await this.prisma.coupon.create({ data: finalData });
     } catch (e) {
       throw new BadRequestException(`Create coupon failed: ${e}`);
     }
