@@ -11,11 +11,11 @@ import { PaymentCreateDto } from './dto/create-payment';
 import { Payment } from '@prisma/client';
 import { PaymentService } from './payment.service';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
-import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
+import { AuthenticatedRequest } from '../../auth/interfaces/authenticated-request.interface';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(private readonly paymentService: PaymentService) { }
 
   @UseGuards(JwtAuthGuard)
   @Post()

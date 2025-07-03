@@ -13,12 +13,12 @@ import { CartCreateDto } from './dto/create-cart';
 import { Cart } from '@prisma/client';
 import { CartService } from './cart.service';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
-import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
+import { AuthenticatedRequest } from '../../auth/interfaces/authenticated-request.interface';
 import { CartOutputDto } from './dto/output-cart';
 
 @Controller('cart')
 export class CartController {
-  constructor(private readonly cartService: CartService) {}
+  constructor(private readonly cartService: CartService) { }
 
   @UseGuards(JwtAuthGuard)
   @Post()

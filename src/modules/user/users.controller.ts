@@ -39,7 +39,7 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Roles('USERS')
   @Post('update-profile')
   @UseInterceptors(FileInterceptor('file'))
   async updateProfile(
@@ -47,21 +47,57 @@ export class UsersController {
     @Req() req: any,
     @Body() body: { name: string; biography: string }
   ) {
-    const img = file
-      ? (await this.cloudinary.uploadImage(file, 'avatars')).secure_url
-      : undefined
+    const user = await this.usersService.findOne(req.user.userId);
+
+    let img = user.img;
+    let imgPublicId = user.imgPublicId;
+
+    if (file) {
+      if (imgPublicId) {
+        await this.cloudinary.deleteImage(imgPublicId);
+      }
+
+      const uploaded = await this.cloudinary.uploadImage(file, 'avatars');
+      img = uploaded?.secure_url
+      imgPublicId = uploaded?.public_id
+
+    }
 
     await this.usersService.updateProfile(req.user.userId, {
       name: body.name,
       biography: body.biography,
-      img,
-    })
+      img: img ?? undefined,
+      imgPublicId: imgPublicId ?? undefined,
+    });
 
     return {
       message: 'Profile updated successfully',
       image: img,
-    }
+    };
   }
+
+  // @Post('update-profile')
+  // @UseInterceptors(FileInterceptor('file'))
+  // async updateProfile(
+  //   @UploadedFile() file: Express.Multer.File,
+  //   @Req() req: any,
+  //   @Body() body: { name: string; biography: string }
+  // ) {
+  //   const img = file
+  //     ? (await this.cloudinary.uploadImage(file, 'avatars')).secure_url
+  //     : undefined
+
+  //   await this.usersService.updateProfile(req.user.userId, {
+  //     name: body.name,
+  //     biography: body.biography,
+  //     img,
+  //   })
+
+  //   return {
+  //     message: 'Profile updated successfully',
+  //     image: img,
+  //   }
+  // }
 
 
   @Get()

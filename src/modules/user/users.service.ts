@@ -11,9 +11,10 @@ import * as dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
 
 interface UpdateProfileDto {
-  name: string
-  biography: string
-  img?: string
+  name: string;
+  biography: string;
+  img?: string;
+  imgPublicId?: string;
 }
 
 
@@ -115,6 +116,7 @@ export class UsersService {
         name: data.name,
         biography: data.biography,
         ...(data.img && { img: data.img }),
+        ...(data.imgPublicId && { imgPublicId: data.imgPublicId }),
       },
     })
   }
@@ -223,6 +225,7 @@ export class UsersService {
         gender: true,
         biography: true,
         img: true,
+        imgPublicId: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -495,11 +498,20 @@ export class UsersService {
       throw new BadRequestException("Mật khẩu và xác nhận mật khẩu không chính xác")
     }
 
-    const user = await this.prisma.user.findUnique({
+    let user = await this.prisma.user.findUnique({
       where: { email: data.email }
     })
     if (!user) {
       throw new BadRequestException("Tài khoản không tồn tại")
+    }
+
+    user = await this.prisma.user.findFirst({
+      where: {
+        codeId: data.code,
+      },
+    });
+    if (!user) {
+      throw new BadRequestException("Mã code không hợp lệ hoặc đã hết hạn")
     }
 
     //check expire code
