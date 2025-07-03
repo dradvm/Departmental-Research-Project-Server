@@ -18,16 +18,6 @@ import { TrackStudyCompleteDto } from './dto/track-study-complete';
 export class StudyProgressController {
   constructor(private readonly studyProgressService: StudyProgressService) {}
 
-  @Get('/:courseId')
-  getStudyProgress(
-    @Param('courseId', ParseIntPipe) courseId: number,
-    @Req() req: ApiRequestData
-  ) {
-    return this.studyProgressService.getStudyProgress(
-      courseId,
-      req.user.userId
-    );
-  }
   @Get('/last-lecture/:courseId')
   getLastLectureStudy(
     @Param('courseId', ParseIntPipe) courseId: number,

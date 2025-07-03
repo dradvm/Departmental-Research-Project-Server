@@ -6,6 +6,10 @@ import { CouponCourseService } from '../coupon_course/couponcourse.service';
 import { CartOutputDto, Item } from './dto/output-cart';
 import { CouponService } from '../coupon/coupon.service';
 import { Decimal } from '@prisma/client/runtime/library';
+import {
+  getFinalPriceOfCart,
+  getFinalPrice
+} from 'src/helpers/calculate-discount-amount';
 
 interface HandleGlobalCouponType {
   success: boolean;
@@ -21,60 +25,6 @@ export class CartService {
     private readonly couponCourseService: CouponCourseService,
     private readonly couponService: CouponService
   ) {}
-
-  async handleApplyGlobalCoupon(
-    code: string,
-    totalPrice: Decimal
-  ): Promise<HandleGlobalCouponType> {
-    const result: HandleGlobalCouponType = {
-      success: false,
-      message: 'Mã khuyến mãi không hợp lệ',
-      final_price: totalPrice,
-      couponId: null
-    };
-
-    const coupon = await this.couponService.getCouponByCode(code);
-    if (!coupon) return result;
-    // check coupon
-    if (!coupon.isGlobal)
-      return {
-        ...result,
-        message: 'Mã khuyến mãi bạn nhập chỉ dành riêng cho từng khóa học'
-      };
-    const now = new Date();
-    if (coupon.startDate > now || now > coupon.endDate)
-      return {
-        ...result,
-        message: 'Quá hoặc chưa tới thời gian khuyến mãi'
-      };
-    if (coupon.appliedAmount >= coupon.quantity)
-      return {
-        ...result,
-        message: 'Đã hết lượt áp dụng khuyến mãi'
-      };
-    if (totalPrice.lt(coupon.minRequire))
-      return {
-        ...result,
-        message: 'Tổng hóa đơn chưa đủ điều kiện để khuyến mãi'
-      };
-    // Apply coupon
-    let savingAmount: Decimal = new Decimal(0);
-    if (coupon.type === 'discount')
-      savingAmount = totalPrice.mul(coupon.value).div(new Decimal(100));
-    else if (coupon.type === 'voucher') savingAmount = coupon.value;
-
-    if (savingAmount.gt(coupon.maxValueDiscount))
-      savingAmount = coupon.maxValueDiscount;
-
-    let final_price: Decimal = totalPrice.sub(savingAmount);
-    final_price = final_price.gt(new Decimal(0)) ? final_price : new Decimal(0);
-    return {
-      success: true,
-      message: 'Đã áp dụng mã khuyến mãi',
-      final_price,
-      couponId: coupon.couponId
-    };
-  }
 
   async addCourseIntoCart(data: CartCreateDto): Promise<Cart> {
     try {
@@ -110,47 +60,23 @@ export class CartService {
         }
       });
       const items: Item[] = [];
+      // originalPrice and totalPrice below are cart's data, not course's data
       let originalPrice = new Decimal(0);
       let totalPrice = new Decimal(0);
       for (const cart of cartDB) {
         // handle coupon
+        let final_price = cart.Course.price;
         const couponcourse: CouponCourse | null =
           await this.couponCourseService.getIsRunningCouponOfCourse(
             cart.courseId
           );
-
-        // use coupon
-        let savingAmount = new Decimal(0);
         if (couponcourse) {
           const coupon: Coupon | null = await this.couponService.getCouponById(
             couponcourse.couponId
           );
-          // handle final price
-          // check if coupon is valid: time and quantity
-          const now = new Date();
-          if (
-            coupon &&
-            coupon.startDate < now &&
-            now < coupon.endDate &&
-            coupon.appliedAmount < coupon.quantity &&
-            coupon.minRequire.lte(cart.Course.price)
-          ) {
-            // discount: %
-            if (coupon.type === 'discount')
-              savingAmount = cart.Course.price
-                .mul(coupon.value)
-                .div(new Decimal(100));
-            else if (coupon.type === 'voucher') savingAmount = coupon.value;
-
-            if (savingAmount.gt(coupon.maxValueDiscount))
-              savingAmount = coupon.maxValueDiscount;
-          }
+          final_price = getFinalPrice(coupon, cart.Course.price, false);
         }
-        let final_price: Decimal = cart.Course.price.sub(savingAmount);
-        final_price = final_price.gt(new Decimal(0))
-          ? final_price
-          : new Decimal(0);
-
+        // push into array
         items.push({
           course: {
             courseId: cart.courseId.toString(),
@@ -170,15 +96,18 @@ export class CartService {
       // handle global coupon
       let appliedResult: HandleGlobalCouponType = {
         success: true,
-        message: 'Không áp dụng mã khuyến mãi',
+        message: '',
         final_price: totalPrice,
         couponId: null
       };
       if (code) {
-        const result: HandleGlobalCouponType =
-          await this.handleApplyGlobalCoupon(code, totalPrice);
+        const glonalCoupon: Coupon | null =
+          await this.couponService.getCouponByCode(code);
+        const result: HandleGlobalCouponType = getFinalPriceOfCart(
+          glonalCoupon,
+          totalPrice
+        );
         appliedResult = { ...result };
-        console.log(result);
       }
       return {
         items: items,

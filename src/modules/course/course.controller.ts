@@ -12,12 +12,12 @@ export class CourseController {
   ) {}
 
   @Get('/:courseId')
-  findCourseById(@Param('courseId', ParseIntPipe) courseId: number) {
+  getCourseById(@Param('courseId', ParseIntPipe) courseId: number) {
     return this.courseService.findById(courseId);
   }
 
   @Get('/lectures/:lectureId')
-  findLectureById(@Param('lectureId', ParseIntPipe) lectureId: number) {
+  getLectureById(@Param('lectureId', ParseIntPipe) lectureId: number) {
     return this.lectureService.findById(lectureId);
   }
 
@@ -27,7 +27,7 @@ export class CourseController {
   }
 
   @Get('/:courseId/reviews')
-  findReviews(
+  getReviews(
     @Param('courseId', ParseIntPipe) courseId: number,
     @Query('rating') rating?: string,
     @Query('search') search?: string,
@@ -41,13 +41,13 @@ export class CourseController {
     );
   }
 
-  @Get('/:courseId/reviews/number')
-  findNumberReviews(
+  @Get('/:courseId/reviews/total')
+  getTotalReviews(
     @Param('courseId', ParseIntPipe) courseId: number,
     @Query('rating') rating?: string,
     @Query('search') search?: string
   ) {
-    return this.reviewService.getNumberReviews(
+    return this.reviewService.getTotalReviews(
       courseId,
       rating ? parseInt(rating) : undefined,
       search

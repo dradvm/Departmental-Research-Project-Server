@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
-import { AuthenticatedRequest } from '../../auth/interfaces/authenticated-request.interface';
+import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
 import { StripeService } from '../stripe/stripe.service';
 import { PaymentTransactionCreateDto } from './dto/create-paymenttransaction';
 

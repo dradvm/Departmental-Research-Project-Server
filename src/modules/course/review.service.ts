@@ -115,7 +115,7 @@ export class ReviewService {
     });
   }
 
-  async getNumberReviews(
+  async getTotalReviews(
     courseId: number,
     rating?: number,
     search: string = ''
