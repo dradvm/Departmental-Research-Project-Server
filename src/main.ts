@@ -20,10 +20,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
   app.setGlobalPrefix('api', { exclude: [''] });
-  app.enableCors({
-    origin: 'http://localhost:3000',
-    credentials: true
-  });
 
   //app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalPipes(
@@ -36,7 +32,7 @@ async function bootstrap() {
 
   //config cors
   app.enableCors({
-    origin: true,
+    origin: 'http://localhost:3000',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     credentials: true

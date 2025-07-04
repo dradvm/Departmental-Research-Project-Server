@@ -98,12 +98,14 @@ export class EnrollmentService {
           AND: [
             {
               ...(search.trim().length > 0 && {
-                OR: Array.from(new Set(search.split(' '))).map((word) => ({
-                  title: {
-                    contains: word,
-                    not: null
-                  }
-                }))
+                OR: Array.from(new Set(search.trim().split(' '))).map(
+                  (word) => ({
+                    title: {
+                      contains: word,
+                      not: null
+                    }
+                  })
+                )
               })
             }
           ]

@@ -86,7 +86,7 @@ export class ReviewService {
               not: null
             },
             ...(search.trim().length > 0 && {
-              OR: Array.from(new Set(search.split(' '))).map((word) => ({
+              OR: Array.from(new Set(search.trim().split(' '))).map((word) => ({
                 review: {
                   contains: word,
                   not: null
@@ -130,7 +130,7 @@ export class ReviewService {
               not: null
             },
             ...(search.trim().length > 0 && {
-              OR: Array.from(new Set(search.split(' '))).map((word) => ({
+              OR: Array.from(new Set(search.trim().split(' '))).map((word) => ({
                 review: {
                   contains: word,
                   not: null

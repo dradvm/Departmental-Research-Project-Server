@@ -10,11 +10,10 @@ import { JwtStrategy } from './passport/jwt.strategy';
 import { TransformInterceptor } from './core/transform.interceptor';
 import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
+      isGlobal: true
     }),
     PassportModule,
     UsersModule,
@@ -25,11 +24,11 @@ import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
         global: true,
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_ACCESS_TOKEN_EXPIRED'),
-        },
+          expiresIn: configService.get<string>('JWT_ACCESS_TOKEN_EXPIRED')
+        }
       }),
-      inject: [ConfigService],
-    }),
+      inject: [ConfigService]
+    })
   ],
   controllers: [AuthController],
   providers: [
@@ -37,7 +36,7 @@ import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
     LocalStrategy,
     JwtStrategy,
     Reflector,
-    TransformInterceptor,
-  ],
+    TransformInterceptor
+  ]
 })
-export class AuthModule { }
+export class AuthModule {}

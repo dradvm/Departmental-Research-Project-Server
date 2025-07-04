@@ -173,7 +173,7 @@ model Message {
   userSenderId                      Int?
   userReceiverId                    Int?
   message                           String?   @db.Text
-  timeSend                          DateTime? @db.DateTime(0)
+  timeSend                          DateTime? @default(now()) @db.DateTime(0)
   User_Message_userReceiverIdToUser User?     @relation("Message_userReceiverIdToUser", fields: [userReceiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Message_UserReceiver")
   User_Message_userSenderIdToUser   User?     @relation("Message_userSenderIdToUser", fields: [userSenderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Message_UserSender")
 
@@ -328,6 +328,7 @@ model User {
   createdAt                            DateTime               @default(now()) @db.DateTime(0)
   updatedAt                            DateTime               @default(now()) @db.DateTime(0)
   isDeleted                            Boolean?               @default(false)
+  imgPublicId                          String?                @db.VarChar(255)
   Answer                               Answer[]
   Cart                                 Cart[]
   Coupon                               Coupon[]
