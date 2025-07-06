@@ -34,11 +34,14 @@ export class MessageService {
         img: true,
         isDeleted: true,
         isActive: true,
+
         Message_Message_userSenderIdToUser: {
-          select: {
-            message: true,
-            timeSend: true
+          orderBy: {
+            timeSend: 'desc'
           },
+          take: 1
+        },
+        Message_Message_userReceiverIdToUser: {
           orderBy: {
             timeSend: 'desc'
           },
@@ -78,12 +81,29 @@ export class MessageService {
       orderBy: [{ timeSend: 'asc' }, { messageId: 'asc' }]
     });
   }
-  addMessage(userSenderId: number, userReceiverId: number, message: string) {
+  addMessage(
+    userSenderId: number,
+    userReceiverId: number,
+    message: string,
+    seenAt: Date | null
+  ) {
     return this.prisma.message.create({
       data: {
         userSenderId: userSenderId,
         userReceiverId: userReceiverId,
-        message: message
+        message: message,
+        seenAt: seenAt
+      }
+    });
+  }
+  seenMessage(userId: number, threadId: number) {
+    return this.prisma.message.updateMany({
+      where: {
+        userSenderId: threadId,
+        userReceiverId: userId
+      },
+      data: {
+        seenAt: new Date()
       }
     });
   }
