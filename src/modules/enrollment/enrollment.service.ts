@@ -195,10 +195,54 @@ export class EnrollmentService {
     });
   }
   async updateLastAccessCourse(userId: number, courseId: number) {
-    return this.prisma.$executeRawUnsafe(`
-      UPDATE Enrollment
-      SET lastAccessedAt = NOW()
-      WHERE userId = ${userId} AND courseId = ${courseId};
-    `);
+    return this.prisma.enrollment.update({
+      where: {
+        userId_courseId: {
+          courseId: courseId,
+          userId: userId
+        }
+      },
+      data: {
+        lastAccessedAt: new Date()
+      }
+    });
+  }
+  async getCourseEnrolledWithLastStudy(userId: number) {
+    return this.prisma.enrollment.findMany({
+      where: {
+        userId: userId
+      },
+      include: {
+        Course: {
+          include: {
+            Section: {
+              select: {
+                Lecture: {
+                  select: {
+                    lectureId: true,
+                    nameLecture: true
+                  }
+                }
+              }
+            },
+            LastLectureStudy: {
+              where: {
+                userId: userId
+              },
+              select: {
+                Lecture: {
+                  include: {
+                    StudyProgress: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        lastAccessedAt: 'desc'
+      }
+    });
   }
 }

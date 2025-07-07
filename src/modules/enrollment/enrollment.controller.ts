@@ -51,4 +51,10 @@ export class EnrollmentController {
       courseId
     );
   }
+  @Get('home')
+  getHomeCourseEnrolledWithLastStudy(@Req() req: ApiRequestData) {
+    return this.enrollmentService.getCourseEnrolledWithLastStudy(
+      req.user.userId
+    );
+  }
 }
