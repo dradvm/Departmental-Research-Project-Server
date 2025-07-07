@@ -11,7 +11,7 @@ import { PaymentCreateDto, PaymentIntentCreateDto } from './dto/create-payment';
 import { Payment } from '@prisma/client';
 import { PaymentService } from './payment.service';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
-import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
+import { ApiRequestData } from 'src/common/base/api.request';
 import { StripeService } from '../stripe/stripe.service';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PaymentOutputDto } from './dto/output-payment';
@@ -26,7 +26,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard)
   @Post('/create-intent')
   async createPaymentTransaction(
-    @Req() req: AuthenticatedRequest,
+    @Req() req: ApiRequestData,
     @Body() body: PaymentIntentCreateDto
   ): Promise<{ clientSecret: string }> {
     const userId: number = req.user.userId;
@@ -39,7 +39,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async createPayment(
-    @Req() req: AuthenticatedRequest,
+    @Req() req: ApiRequestData,
     @Body() data: PaymentCreateDto
   ): Promise<Payment | null> {
     return await this.paymentService.addOnePayment(data, req.user.userId);
