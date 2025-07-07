@@ -177,34 +177,31 @@ export class UsersService {
   }
 
 
-  async findAll(query: string, current: number, pageSize: number) {
-    const { filter, sort } = aqp(query);
-    if (filter.current) delete filter.current;
-    if (filter.pageSize) delete filter.pageSize;
-    const prismaFilter = this.convertAqpFilterToPrisma(filter)
-    console.log(prismaFilter);
-    if (!current) current = 1;
-    if (!pageSize) pageSize = 10;
-
-    const totalItems = (await this.prisma.user.findMany(prismaFilter)).length;
-    const totalPages = Math.ceil(totalItems / pageSize);
-    const skip = (current - 1) * (pageSize);
-
+  async findAll(
+    limit: number,
+    skip: number,
+    role: string,
+    searchText?: string
+  ) {
     const result = await this.prisma.user.findMany({
       where: {
-        AND: [
-          prismaFilter,
-          { isDeleted: false }
-        ],
+        role: role,
+        isDeleted: false,
+        ...(searchText
+          ? {
+              name: {
+                contains: searchText.toLowerCase()
+              }
+            }
+          : {})
       },
-      take: pageSize,
-      skip: skip,
-      orderBy: sort ? this.parseSort(sort) : undefined,
+      take: limit,
+      skip: skip
     });
 
     const userWithoutPassword = result.map(({ password, codeExpired, codeId, ...rest }) => rest);
 
-    return { userWithoutPassword, totalPages };
+    return userWithoutPassword;
   }
 
   async findOne(id: number) {

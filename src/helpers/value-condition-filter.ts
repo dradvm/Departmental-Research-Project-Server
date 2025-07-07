@@ -71,23 +71,31 @@ export function getWhereOfNormalCoupon(
     },
     Course: {
       User: {
-        userId: teacherId,
-        ...(searchText
-          ? {
-              name: {
-                contains: searchText.toLowerCase()
+        userId: teacherId
+      }
+    },
+    ...(searchText
+      ? {
+          OR: [
+            {
+              Course: {
+                User: {
+                  name: {
+                    contains: searchText.toLowerCase()
+                  }
+                }
+              }
+            },
+            {
+              Course: {
+                title: {
+                  contains: searchText.toLowerCase()
+                }
               }
             }
-          : {})
-      },
-      ...(searchText
-        ? {
-            title: {
-              contains: searchText.toLowerCase()
-            }
-          }
-        : {})
-    }
+          ]
+        }
+      : {})
   };
   return where;
 }

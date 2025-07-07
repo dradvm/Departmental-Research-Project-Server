@@ -65,13 +65,18 @@ export class UsersController {
 
 
   @Get()
-  @Public()
   async findAll(
-    @Query() query: string,
-    @Query("current") current: string,
-    @Query("pageSize") pageSize: string,
+    @Query('limit') limit: string,
+    @Query('skip') skip: string,
+    @Query('role') role: string,
+    @Query('searchText') searchText?: string
   ) {
-    return this.usersService.findAll(query, +current, +pageSize);
+    return this.usersService.findAll(
+      parseInt(limit),
+      parseInt(skip),
+      role,
+      searchText || undefined
+    );
   }
 
   @Get(':id')
