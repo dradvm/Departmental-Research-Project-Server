@@ -69,7 +69,10 @@ export class CouponService {
     }
     // appliedAmount is not null
     if (!data.appliedAmount) data.appliedAmount = 0;
-
+    // set time for endDate
+    const newEndDate = new Date(data.endDate);
+    newEndDate.setHours(23, 59, 59, 0);
+    data.endDate = newEndDate.toISOString();
     return data;
   }
 

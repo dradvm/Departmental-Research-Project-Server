@@ -30,6 +30,7 @@ import { NoteModule } from './modules/note/note.module';
 import { QAModule } from './modules/question_answer/qa.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { MessageModule } from './modules/message/message.module';
+import { OverviewModule } from './modules/overview/overview.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { MessageModule } from './modules/message/message.module';
     CouponModule,
     CouponCourseModule,
     UserCouponModule,
+    OverviewModule,
     CloudinaryModule,
     StudyProgressModule,
     EnrollmentModule,

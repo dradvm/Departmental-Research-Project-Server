@@ -45,6 +45,31 @@ export class PaymentController {
     return await this.paymentService.addOnePayment(data, req.user.userId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('/my-transaction')
+  async getAllUserPayment(
+    @Req() req: ApiRequestData,
+    @Query('limit') limit: string,
+    @Query('skip') skip: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
+    @Query('userName') userName?: string
+  ): Promise<PaymentOutputDto[]> {
+    return await this.paymentService.getAllPayment(
+      parseInt(limit),
+      parseInt(skip),
+      req.user.userId,
+      startDate || undefined,
+      endDate || undefined,
+      minPrice ? new Decimal(minPrice) : undefined,
+      maxPrice ? new Decimal(maxPrice) : undefined,
+      userName || undefined
+    );
+  }
+
+  // admin feature
   @Get()
   async getAllPayment(
     @Query('limit') limit: string,
