@@ -49,8 +49,8 @@ model Coupon {
   couponId         Int             @id @default(autoincrement())
   type             String          @db.VarChar(100)
   value            Decimal         @db.Decimal(10, 2)
-  startDate        DateTime        @db.Date
-  endDate          DateTime        @db.Date
+  startDate        DateTime        @db.DateTime(0)
+  endDate          DateTime        @db.DateTime(0)
   quantity         Int
   appliedAmount    Int
   minRequire       Decimal         @db.Decimal(10, 2)
@@ -222,11 +222,9 @@ model NotificationReceiver {
 model Payment {
   paymentId     Int             @id @default(autoincrement())
   timePayment   DateTime        @db.DateTime(0)
-  totalPrice    Decimal         @db.Decimal(10, 2)
   userId        Int
   couponId      Int?
   final_price   Decimal         @default(0.00) @db.Decimal(10, 2)
-  originalPrice Decimal         @default(0.00) @db.Decimal(10, 2)
   User          User            @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
   Coupon        Coupon?         @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_coupon")
   PaymentDetail PaymentDetail[]

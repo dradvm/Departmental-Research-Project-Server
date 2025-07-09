@@ -42,8 +42,6 @@ export class PaymentService {
         data: {
           userId: userId,
           couponId: null,
-          originalPrice: Decimal(data.originalPrice),
-          totalPrice: Decimal(data.totalPrice),
           final_price: Decimal(data.totalPrice),
           timePayment: new Date()
         }
@@ -235,29 +233,62 @@ export class PaymentService {
           Coupon: true
         }
       });
-      const result = data.map((da) => {
-        return {
-          paymentId: da.paymentId.toString(),
-          timePayment: da.timePayment.toISOString(),
-          originalPrice: da.originalPrice.toString(),
-          totalPrice: da.totalPrice.toString(),
-          couponId: da.couponId ? da.couponId?.toString() : null,
-          code: da.Coupon ? da.Coupon.code : null,
-          finalPrice: da.final_price.toString(),
-          userId: da.userId.toString(),
-          userName: da.User?.name ?? null,
-          paymentDetail: da.PaymentDetail.map((pay) => ({
-            courseId: pay.courseId.toString(),
-            price: pay.price.toString(),
-            finalPrice: pay.final_price.toString(),
-            courseTitle: pay.Course.title,
-            courseThumbnail: pay.Course.thumbnail
-          }))
-        };
-      });
+      const result = Promise.all(
+        data.map(async (da) => {
+          const figure: { originalPrice: Decimal; totalPrice: Decimal } =
+            await this.paymentDetailService.getTotalPriceOfOnePayment(
+              da.paymentId
+            );
+          return {
+            paymentId: da.paymentId.toString(),
+            timePayment: da.timePayment.toISOString(),
+            originalPrice: figure.originalPrice.toString(),
+            totalPrice: figure.totalPrice.toString(),
+            couponId: da.couponId ? da.couponId?.toString() : null,
+            code: da.Coupon ? da.Coupon.code : null,
+            finalPrice: da.final_price.toString(),
+            userId: da.userId.toString(),
+            userName: da.User?.name ?? null,
+            paymentDetail: da.PaymentDetail.map((pay) => ({
+              courseId: pay.courseId.toString(),
+              price: pay.price.toString(),
+              finalPrice: pay.final_price.toString(),
+              courseTitle: pay.Course.title,
+              courseThumbnail: pay.Course.thumbnail
+            }))
+          };
+        })
+      );
       return result;
     } catch (e) {
       throw new BadRequestException(`Can not get all payment: ${e}`);
     }
+  }
+
+  async getRevenueByMonths() {
+    const report: { month: number; revenue: Decimal; count: number }[] = [];
+    for (let i = 0; i <= 11; i++)
+      report.push({
+        month: i,
+        revenue: new Decimal(0),
+        count: 0
+      });
+    const data = await this.prisma.payment.findMany({
+      select: {
+        timePayment: true,
+        final_price: true
+      }
+    });
+    data.forEach((da) => {
+      const month: number = da.timePayment.getMonth();
+      report[month].revenue = report[month].revenue.add(da.final_price);
+      report[month].count++;
+    });
+    return report.map((re) => ({
+      name: `Tháng ${re.month + 1}`,
+      month: re.month + 1,
+      revenue: Number(re.revenue),
+      count: re.count
+    }));
   }
 }
