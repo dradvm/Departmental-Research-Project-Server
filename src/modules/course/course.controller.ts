@@ -1,7 +1,15 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Query,
+  Req
+} from '@nestjs/common';
 import { CourseService } from './course.service';
 import { LectureService } from './lecture.service';
 import { ReviewService } from './review.service';
+import { ApiRequestData } from 'src/common/base/api.request';
 
 @Controller('courses')
 export class CourseController {
@@ -51,6 +59,19 @@ export class CourseController {
       courseId,
       rating ? parseInt(rating) : undefined,
       search
+    );
+  }
+
+  @Get('/:courseId/others')
+  getOtherCourses(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Query('instructorId', ParseIntPipe) instructorId: number,
+    @Req() req: ApiRequestData
+  ) {
+    return this.courseService.findOtherCourseOfInstructor(
+      courseId,
+      req.user.userId,
+      instructorId
     );
   }
 }
