@@ -30,8 +30,8 @@ import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly cloudinary: CloudinaryService,
-  ) { }
+    private readonly cloudinary: CloudinaryService
+  ) {}
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
@@ -49,20 +49,19 @@ export class UsersController {
   ) {
     const img = file
       ? (await this.cloudinary.uploadImage(file, 'avatars')).secure_url
-      : undefined
+      : undefined;
 
     await this.usersService.updateProfile(req.user.userId, {
       name: body.name,
       biography: body.biography,
-      img,
-    })
+      img
+    });
 
     return {
       message: 'Profile updated successfully',
-      image: img,
-    }
+      image: img
+    };
   }
-
 
   @Get()
   async findAll(

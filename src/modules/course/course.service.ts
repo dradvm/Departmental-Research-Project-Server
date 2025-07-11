@@ -22,8 +22,67 @@ export class CourseService {
           orderBy: {
             order: 'asc'
           }
+        },
+        User: {
+          select: {
+            userId: true,
+            name: true
+          }
+        },
+        CourseCategory: {
+          include: {
+            Category: true
+          }
+        },
+        CourseObjective: true,
+        Wishlist: true,
+        Review: true,
+        _count: {
+          select: {
+            Enrollment: true,
+            Review: true
+          }
         }
       }
+    });
+  }
+  async findOtherCourseOfInstructor(
+    courseId: number,
+    userId: number,
+    instructorId: number
+  ) {
+    return this.prisma.course.findMany({
+      where: {
+        courseId: {
+          not: courseId
+        },
+        userId: instructorId
+      },
+      include: {
+        Section: {
+          include: {
+            Lecture: true
+          }
+        },
+        Review: true,
+        _count: {
+          select: {
+            Enrollment: true
+          }
+        },
+        Wishlist: {
+          where: {
+            userId: userId
+          }
+        }
+      },
+      orderBy: [
+        {
+          Enrollment: {
+            _count: 'desc'
+          }
+        }
+      ]
     });
   }
 }
