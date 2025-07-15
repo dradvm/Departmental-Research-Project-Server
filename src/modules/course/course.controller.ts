@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Post, Query, Req, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query, Req, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { CourseService } from './course.service';
 import { LectureService } from './lecture.service';
 import { ReviewService } from './review.service';
@@ -7,7 +7,8 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { Public } from 'src/decorator/customize';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
-import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
+import { ApiRequestData } from 'src/common/base/api.request';
+import { UpdateCourseDto } from './dto/update-course.dto';
 
 
 @Controller('courses')
@@ -18,6 +19,17 @@ export class CourseController {
     private readonly reviewService: ReviewService,
     private readonly cloudinaryService: CloudinaryService
   ) { }
+
+  @Get('me')
+  async getMyCourses(@Req() req: ApiRequestData) {
+    const userIdRaw = req.user?.userId;
+    const userId = Number(userIdRaw);
+
+    if (!userId || isNaN(userId)) {
+      throw new BadRequestException('userId không hợp lệ');
+    }
+    return this.courseService.getCoursesByUser(userId);
+  }
 
   @Get('/:courseId')
   getCourseById(@Param('courseId', ParseIntPipe) courseId: number) {
@@ -84,7 +96,9 @@ export class CourseController {
   async createFullCourse(
     @Body('userId', ParseIntPipe) userId: number,
     @Body('title') title: string,
+    @Body('subTitle') subTitle: string, //
     @Body('description') description: string,
+    @Body('requirement') requirement: string, //
     @Body('price') price: string,
     @Body('isPublic') isPublic: string,
     @Body('sections') sectionsRaw: string,
@@ -101,7 +115,9 @@ export class CourseController {
     const dto: CreateCourseDto = {
       userId,
       title,
+      subTitle, //
       description,
+      requirement, //
       price: parseFloat(price),
       isPublic: isPublic === 'true',
       sections,
@@ -116,17 +132,89 @@ export class CourseController {
 
     return this.courseService.createCourseWithContent(dto, files?.videos || [], thumbnailUrl);
   }
-  @UseGuards(JwtAuthGuard)
-  @Get('me')
-  async getMyCourses(@Req() req: AuthenticatedRequest) {
-    console.log("req.user:", req.user);
-    const userIdRaw = req.user?.userId;
-    const userId = Number(userIdRaw);
 
-    if (!userId || isNaN(userId)) {
-      throw new BadRequestException('userId không hợp lệ');
+  // @Put('update-full/:id')
+  // @UseInterceptors(
+  //   FileFieldsInterceptor([
+  //     { name: 'thumbnail', maxCount: 1 },
+  //     { name: 'videos', maxCount: 100 },
+  //   ]),
+  // )
+  // async updateFullCourse(
+  //   @Param('id') id: string,
+  //   @UploadedFiles()
+  //   files: {
+  //     thumbnail?: Express.Multer.File[];
+  //     videos?: Express.Multer.File[];
+  //   },
+  //   @Body() body: any,
+  //   @Req() req: ApiRequestData,
+  // ) {
+  //   return this.courseService.updateFullCourse(+id, req.user.userId, body, files);
+  // }
+
+  // @Put('update-full/:id')
+  // @UseInterceptors(
+  //   FileFieldsInterceptor([
+  //     { name: 'thumbnail', maxCount: 1 },
+  //     { name: 'videos', maxCount: 100 },
+  //   ]),
+  // )
+  // async updateFullCourse(
+  //   @Param('id') id: string,
+  //   @UploadedFiles()
+  //   files: {
+  //     thumbnail?: Express.Multer.File[];
+  //     videos?: Express.Multer.File[];
+  //   },
+  //   @Body() body: any,
+  //   @Req() req: ApiRequestData,
+  // ) {
+  //   return this.courseService.updateFullCourse(+id, req.user.userId, body, files);
+  // }
+
+  @Patch('update-full/:id')
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'videos' },
+    { name: 'thumbnail', maxCount: 1 },
+  ]))
+  async updateFullCourse(
+    @Param('id', ParseIntPipe) courseId: number,
+    @Body('title') title: string,
+    @Body('subTitle') subTitle: string,
+    @Body('description') description: string,
+    @Body('requirement') requirement: string,
+    @Body('price') price: string,
+    @Body('isPublic') isPublic: string,
+    @Body('sections') sectionsRaw: string,
+    @UploadedFiles() files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] },
+  ) {
+    let sections;
+    try {
+      sections = JSON.parse(sectionsRaw);
+      console.log('Parsed sections:', sections);
+    } catch {
+      throw new BadRequestException('Invalid sections JSON');
     }
-    return this.courseService.getCoursesByUser(userId);
+
+    const dto: UpdateCourseDto = {
+      title,
+      subTitle,
+      description,
+      requirement,
+      price: parseFloat(price),
+      isPublic: isPublic === 'true',
+      sections,
+    };
+
+    let thumbnailUrl: string | undefined;
+    if (files.thumbnail?.[0]) {
+      const uploaded = await this.cloudinaryService.uploadImage(files.thumbnail[0], 'course-thumbnails');
+      thumbnailUrl = uploaded.secure_url;
+    }
+
+    return this.courseService.updateCourseWithContent(courseId, dto, files?.videos || [], thumbnailUrl);
   }
+
 
 }

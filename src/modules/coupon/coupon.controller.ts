@@ -15,7 +15,7 @@ import { CouponService } from './coupon.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { Coupon } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
-import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
+import { ApiRequestData } from 'src/common/base/api.request';
 import { NormalCouponOutputDto } from './dto/output-coupon.dto';
 import { CouponCourseService } from '../coupon_course/couponcourse.service';
 
@@ -98,7 +98,7 @@ export class CouponController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async createCoupon(
-    @Req() req: AuthenticatedRequest,
+    @Req() req: ApiRequestData,
     @Body()
     body: CreateCouponDto
   ): Promise<Coupon> {

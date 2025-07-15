@@ -49,8 +49,8 @@ model Coupon {
   couponId         Int             @id @default(autoincrement())
   type             String          @db.VarChar(100)
   value            Decimal         @db.Decimal(10, 2)
-  startDate        DateTime        @db.Date
-  endDate          DateTime        @db.Date
+  startDate        DateTime        @db.DateTime(0)
+  endDate          DateTime        @db.DateTime(0)
   quantity         Int
   appliedAmount    Int
   minRequire       Decimal         @db.Decimal(10, 2)
@@ -91,6 +91,7 @@ model Course {
   thumbnail        String?            @db.Text
   requirement      String?            @db.Text
   targetAudience   String?            @db.Text
+  videoUrl         String?            @db.VarChar(500)
   Cart             Cart[]
   Certificate      Certificate?
   CouponCourse     CouponCourse[]
@@ -173,7 +174,8 @@ model Message {
   userSenderId                      Int?
   userReceiverId                    Int?
   message                           String?   @db.Text
-  timeSend                          DateTime? @db.DateTime(0)
+  timeSend                          DateTime? @default(now()) @db.DateTime(0)
+  seenAt                            DateTime? @db.DateTime(0)
   User_Message_userReceiverIdToUser User?     @relation("Message_userReceiverIdToUser", fields: [userReceiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Message_UserReceiver")
   User_Message_userSenderIdToUser   User?     @relation("Message_userSenderIdToUser", fields: [userSenderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Message_UserSender")
 

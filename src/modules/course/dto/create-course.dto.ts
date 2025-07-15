@@ -10,6 +10,8 @@ export class CreateCourseDto {
     subTitle?: string;
     @IsOptional()
     description?: string;
+    @IsOptional()
+    requirement?: string;
     @IsNotEmpty()
     price: number;
     @IsOptional()

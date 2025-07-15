@@ -28,6 +28,8 @@ import { StudyProgressModule } from './modules/study-progress/study-progress.mod
 import { EnrollmentModule } from './modules/enrollment/enrollment.module';
 import { NoteModule } from './modules/note/note.module';
 import { QAModule } from './modules/question_answer/qa.module';
+import { WishlistModule } from './modules/wishlist/wishlist.module';
+import { MessageModule } from './modules/message/message.module';
 
 @Module({
   imports: [
@@ -50,6 +52,8 @@ import { QAModule } from './modules/question_answer/qa.module';
     EnrollmentModule,
     NoteModule,
     QAModule,
+    WishlistModule,
+    MessageModule,
     StripeModule.forRootAsync(),
     CacheModule.registerAsync({
       isGlobal: true,

@@ -40,18 +40,20 @@ export class QuestionService {
           },
           {
             ...(search.trim().length > 0 && {
-              OR: Array.from(new Set(search.split(' '))).flatMap((word) => [
-                {
-                  questionTitle: {
-                    contains: word
+              OR: Array.from(new Set(search.trim().split(' '))).flatMap(
+                (word) => [
+                  {
+                    questionTitle: {
+                      contains: word
+                    }
+                  },
+                  {
+                    questionContent: {
+                      contains: word
+                    }
                   }
-                },
-                {
-                  questionContent: {
-                    contains: word
-                  }
-                }
-              ])
+                ]
+              )
             })
           }
         ]
@@ -109,18 +111,20 @@ export class QuestionService {
           },
           {
             ...(search.trim().length > 0 && {
-              OR: Array.from(new Set(search.split(' '))).flatMap((word) => [
-                {
-                  questionTitle: {
-                    contains: word
+              OR: Array.from(new Set(search.trim().split(' '))).flatMap(
+                (word) => [
+                  {
+                    questionTitle: {
+                      contains: word
+                    }
+                  },
+                  {
+                    questionContent: {
+                      contains: word
+                    }
                   }
-                },
-                {
-                  questionContent: {
-                    contains: word
-                  }
-                }
-              ])
+                ]
+              )
             })
           }
         ]
@@ -181,18 +185,20 @@ export class QuestionService {
           },
           {
             ...(search.trim().length > 0 && {
-              OR: Array.from(new Set(search.split(' '))).flatMap((word) => [
-                {
-                  questionTitle: {
-                    contains: word
+              OR: Array.from(new Set(search.trim().split(' '))).flatMap(
+                (word) => [
+                  {
+                    questionTitle: {
+                      contains: word
+                    }
+                  },
+                  {
+                    questionContent: {
+                      contains: word
+                    }
                   }
-                },
-                {
-                  questionContent: {
-                    contains: word
-                  }
-                }
-              ])
+                ]
+              )
             })
           }
         ]
@@ -225,18 +231,20 @@ export class QuestionService {
           },
           {
             ...(search.trim().length > 0 && {
-              OR: Array.from(new Set(search.split(' '))).flatMap((word) => [
-                {
-                  questionTitle: {
-                    contains: word
+              OR: Array.from(new Set(search.trim().split(' '))).flatMap(
+                (word) => [
+                  {
+                    questionTitle: {
+                      contains: word
+                    }
+                  },
+                  {
+                    questionContent: {
+                      contains: word
+                    }
                   }
-                },
-                {
-                  questionContent: {
-                    contains: word
-                  }
-                }
-              ])
+                ]
+              )
             })
           }
         ]

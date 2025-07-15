@@ -101,13 +101,18 @@ export class UsersController {
 
 
   @Get()
-  @Public()
   async findAll(
-    @Query() query: string,
-    @Query("current") current: string,
-    @Query("pageSize") pageSize: string,
+    @Query('limit') limit: string,
+    @Query('skip') skip: string,
+    @Query('role') role: string,
+    @Query('searchText') searchText?: string
   ) {
-    return this.usersService.findAll(query, +current, +pageSize);
+    return this.usersService.findAll(
+      parseInt(limit),
+      parseInt(skip),
+      role,
+      searchText || undefined
+    );
   }
 
   @Get(':id')
@@ -128,5 +133,12 @@ export class UsersController {
       throw new BadRequestException('Id không hợp lệ');
     }
     return this.usersService.remove(userId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('USERS', 'ADMIN')
+  @Patch(':id/role/instructor')
+  async updateRoleToInstructor(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.updateUserRole(id, 'INSTRUCTOR');
   }
 }

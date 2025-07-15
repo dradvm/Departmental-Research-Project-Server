@@ -1,9 +1,21 @@
-import { Controller, Post, UseGuards, Req, Body, Get, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Req,
+  Body,
+  Get,
+  UseInterceptors
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request } from 'express';
 import { LocalAuthGuard } from './passport/local-auth.guard';
 import { Public, ResponseMessage } from 'src/decorator/customize';
-import { ChangePasswordAuthDto, CodeAuthDto, CreateAuthDto } from './dto/create-auth.dto';
+import {
+  ChangePasswordAuthDto,
+  CodeAuthDto,
+  CreateAuthDto
+} from './dto/create-auth.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { TransformInterceptor } from './core/transform.interceptor';
 
@@ -69,6 +81,4 @@ export class AuthController {
     });
     return 'ok';
   }
-
-
 }
