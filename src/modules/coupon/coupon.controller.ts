@@ -16,7 +16,10 @@ import { CreateCouponDto } from './dto/create-coupon.dto';
 import { Coupon } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
 import { ApiRequestData } from 'src/common/base/api.request';
-import { NormalCouponOutputDto } from './dto/output-coupon.dto';
+import {
+  GlobalCouponResponse,
+  NormalCouponResponse
+} from './dto/output-coupon.dto';
 import { CouponCourseService } from '../coupon_course/couponcourse.service';
 
 @Controller('coupon')
@@ -53,7 +56,7 @@ export class CouponController {
     @Query('minPrice') minPrice?: string,
     @Query('minPercent') minPercent?: string,
     @Query('searchText') searchText?: string
-  ): Promise<NormalCouponOutputDto[]> {
+  ): Promise<NormalCouponResponse> {
     const teacherId: number | undefined = userId ? parseInt(userId) : undefined;
     return await this.couponCourseService.getAllNormalCoupons(
       parseInt(skip),
@@ -77,7 +80,7 @@ export class CouponController {
     @Query('endDate') endDate?: string,
     @Query('minPercent') minPercent?: string,
     @Query('minPrice') minPrice?: string
-  ): Promise<Coupon[]> {
+  ): Promise<GlobalCouponResponse> {
     return await this.couponService.getAllGlobalCoupons(
       parseInt(skip),
       parseInt(limit),

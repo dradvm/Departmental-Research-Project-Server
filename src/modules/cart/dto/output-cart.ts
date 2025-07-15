@@ -34,7 +34,7 @@ class CourseInCart {
 class TeacherInCart {
   @IsDefined()
   @IsString()
-  userId: string;
+  userId: string | null;
 
   @IsDefined()
   @ValidateIf((o: TeacherInCart) => o.userName !== null)

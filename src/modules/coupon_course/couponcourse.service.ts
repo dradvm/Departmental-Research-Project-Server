@@ -2,7 +2,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Coupon, CouponCourse, Course, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CouponCourseCreateDto } from './dto/create-couponcourse';
-import { NormalCouponOutputDto } from '../coupon/dto/output-coupon.dto';
+import {
+  NormalCouponOutputDto,
+  NormalCouponResponse
+} from '../coupon/dto/output-coupon.dto';
 import { getWhereOfNormalCoupon } from 'src/helpers/value-condition-filter';
 
 type CouponCourseWithRelations = CouponCourse & {
@@ -21,7 +24,7 @@ export class CouponCourseService {
       const data = {
         ...dataReq,
         isAccepted: false,
-        isRunning: false
+        isDeleted: false
       };
       return await this.prisma.couponCourse.create({ data });
     } catch (e) {
@@ -31,29 +34,11 @@ export class CouponCourseService {
     }
   }
 
-  // reset isRunning attribute for all coupons of a course
-  async resetIsRunningForAllCouponOfACourse(courseId: number) {
-    try {
-      return await this.prisma.couponCourse.updateMany({
-        where: {
-          courseId: courseId
-        },
-        data: {
-          isRunning: false
-        }
-      });
-    } catch (e) {
-      throw new BadRequestException(
-        `Can not reset isRunning attibute for all coupon of course ${courseId}: ${e}`
-      );
-    }
-  }
-
   async updateOneCouponCourse(
     couponId: number,
     courseId: number,
-    isRunning: boolean,
-    isAccepted: boolean
+    isAccepted: boolean,
+    isDeleted: boolean
   ): Promise<CouponCourse> {
     try {
       return await this.prisma.couponCourse.update({
@@ -64,7 +49,7 @@ export class CouponCourseService {
           }
         },
         data: {
-          isRunning,
+          isDeleted,
           isAccepted
         }
       });
@@ -82,8 +67,8 @@ export class CouponCourseService {
       return await client.couponCourse.findFirst({
         where: {
           courseId: courseId,
-          isRunning: true,
-          isAccepted: true
+          isAccepted: true,
+          isDeleted: false
         },
         include: {
           Coupon: true,
@@ -97,11 +82,14 @@ export class CouponCourseService {
     }
   }
 
-  async getAllCouponOfCourse(courseId: number): Promise<CouponCourse[]> {
+  async getAllCouponOfCourse(userId: number): Promise<CouponCourse[]> {
     try {
       return await this.prisma.couponCourse.findMany({
         where: {
-          courseId: courseId
+          Course: {
+            userId: userId
+          },
+          isDeleted: false
         },
         include: {
           Coupon: true,
@@ -110,7 +98,7 @@ export class CouponCourseService {
       });
     } catch (e) {
       throw new BadRequestException(
-        `Can not get all coupons of course ${courseId}: ${e}`
+        `Can not get all coupons of course ${userId}: ${e}`
       );
     }
   }
@@ -125,9 +113,9 @@ export class CouponCourseService {
     minPercent?: number,
     minPrice?: number,
     searchText?: string
-  ): Promise<NormalCouponOutputDto[]> {
+  ): Promise<NormalCouponResponse> {
     try {
-      const where2 = getWhereOfNormalCoupon(
+      const where = getWhereOfNormalCoupon(
         teacherId,
         startDate,
         endDate,
@@ -136,8 +124,7 @@ export class CouponCourseService {
         searchText
       );
       const data = await this.prisma.couponCourse.findMany({
-        // where: where,
-        where: where2,
+        where: where,
         skip: skip,
         take: limit,
         include: {
@@ -149,6 +136,11 @@ export class CouponCourseService {
           }
         }
       });
+      const dataLength = (
+        await this.prisma.couponCourse.findMany({
+          where: where
+        })
+      ).length;
       const result: NormalCouponOutputDto[] = data.map((da) => ({
         couponId: da.couponId,
         type: da.Coupon.type,
@@ -162,17 +154,20 @@ export class CouponCourseService {
         code: da.Coupon.code,
         isGlobal: da.Coupon.isGlobal,
         // status
-        isRunning: da.isRunning,
         isAccepted: da.isAccepted,
+        isDeleted: da.isDeleted,
         // course information
         courseId: da.Course.courseId,
         coureTitle: da.Course.title,
         userId: da.Course.User?.userId || null,
         userName: da.Course.User?.name || null
       }));
-      return result;
+      return {
+        normalCoupons: result,
+        length: dataLength
+      };
     } catch (e) {
-      throw new BadRequestException(`Get all global coupons failed: ${e}`);
+      throw new BadRequestException(`Get all normal coupons failed: ${e}`);
     }
   }
 }

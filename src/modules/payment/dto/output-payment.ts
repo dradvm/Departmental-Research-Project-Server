@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsDefined,
+  IsNumber,
   IsString,
   ValidateIf,
   ValidateNested
@@ -30,7 +31,7 @@ class PaymentDetailType {
   finalPrice: string;
 }
 
-export class PaymentOutputDto {
+export class PaymentOutputType {
   @IsString()
   paymentId: string;
 
@@ -40,15 +41,15 @@ export class PaymentOutputDto {
   @IsString()
   userId: string;
 
-  @ValidateIf((o: PaymentOutputDto) => o.userName !== null)
+  @ValidateIf((o: PaymentOutputType) => o.userName !== null)
   @IsString()
   userName: string | null;
 
-  @ValidateIf((o: PaymentOutputDto) => o.couponId !== null)
+  @ValidateIf((o: PaymentOutputType) => o.couponId !== null)
   @IsString()
   couponId: string | null;
 
-  @ValidateIf((o: PaymentOutputDto) => o.code !== null)
+  @ValidateIf((o: PaymentOutputType) => o.code !== null)
   @IsString()
   code: string | null;
 
@@ -65,4 +66,14 @@ export class PaymentOutputDto {
   @ValidateNested({ each: true })
   @Type(() => PaymentDetailType)
   paymentDetail: PaymentDetailType[];
+}
+
+export class PaymentOutputRespone {
+  @IsDefined()
+  @ValidateNested({ each: true })
+  @Type(() => PaymentOutputType)
+  payments: PaymentOutputType[];
+
+  @IsNumber()
+  length: number;
 }

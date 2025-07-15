@@ -14,7 +14,7 @@ import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
 import { ApiRequestData } from 'src/common/base/api.request';
 import { StripeService } from '../stripe/stripe.service';
 import { Decimal } from '@prisma/client/runtime/library';
-import { PaymentOutputDto } from './dto/output-payment';
+import { PaymentOutputRespone } from './dto/output-payment';
 
 @Controller('payment')
 export class PaymentController {
@@ -56,7 +56,7 @@ export class PaymentController {
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('userName') userName?: string
-  ): Promise<PaymentOutputDto[]> {
+  ): Promise<PaymentOutputRespone> {
     return await this.paymentService.getAllPayment(
       parseInt(limit),
       parseInt(skip),
@@ -80,7 +80,7 @@ export class PaymentController {
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('userName') userName?: string
-  ): Promise<PaymentOutputDto[]> {
+  ): Promise<PaymentOutputRespone> {
     return await this.paymentService.getAllPayment(
       parseInt(limit),
       parseInt(skip),
