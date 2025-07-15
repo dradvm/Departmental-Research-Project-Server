@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { CouponType } from 'src/enums/coupon-type.enum';
 import { getWhereOfGlobalCoupon } from 'src/helpers/value-condition-filter';
+import { GlobalCouponResponse } from './dto/output-coupon.dto';
 
 @Injectable()
 export class CouponService {
@@ -69,7 +70,10 @@ export class CouponService {
     }
     // appliedAmount is not null
     if (!data.appliedAmount) data.appliedAmount = 0;
-
+    // set time for endDate
+    const newEndDate = new Date(data.endDate);
+    newEndDate.setHours(23, 59, 59, 0);
+    data.endDate = newEndDate.toISOString();
     return data;
   }
 
@@ -109,7 +113,7 @@ export class CouponService {
     endDate?: string,
     minPercent?: number,
     minPrice?: number
-  ): Promise<Coupon[]> {
+  ): Promise<GlobalCouponResponse> {
     try {
       const where = getWhereOfGlobalCoupon(
         isGlobal,
@@ -118,11 +122,17 @@ export class CouponService {
         minPercent,
         minPrice
       );
-      return await this.prisma.coupon.findMany({
+      const results: Coupon[] = await this.prisma.coupon.findMany({
         where: where,
         skip: skip,
         take: limit
       });
+      const dataLength = (await this.prisma.coupon.findMany({ where: where }))
+        .length;
+      return {
+        globalCoupons: results,
+        length: dataLength
+      };
     } catch (e) {
       throw new BadRequestException(`Get all global coupons failed: ${e}`);
     }

@@ -28,6 +28,26 @@ export class CourseService {
           orderBy: {
             order: 'asc'
           }
+        },
+        User: {
+          select: {
+            userId: true,
+            name: true
+          }
+        },
+        CourseCategory: {
+          include: {
+            Category: true
+          }
+        },
+        CourseObjective: true,
+        Wishlist: true,
+        Review: true,
+        _count: {
+          select: {
+            Enrollment: true,
+            Review: true
+          }
         }
       }
     });
@@ -410,38 +430,6 @@ export class CourseService {
         where: { lectureId: { in: lectureIdsToDelete } },
       });
 
-      // for (const [lectureIndex, lecture] of section.lectures.entries()) {
-      //   const file = videos[videoIndex];
-      //   let videoUrl = lecture.video ?? ''; // giữ video cũ nếu không có file mới
-
-      //   if (file) {
-      //     const uploaded = await this.cloudinaryService.uploadVideo(file, 'lectures');
-      //     videoUrl = uploaded.secure_url;
-      //     videoIndex++;
-      //     console.log(`Uploaded video: ${videoUrl}`);
-      //     console.log(`Lecture: ${lecture.lectureId}, Video URL: ${videoUrl}`);
-      //   }
-
-      //   if (lecture.lectureId) {
-      //     await this.prisma.lecture.update({
-      //       where: { lectureId: lecture.lectureId },
-      //       data: {
-      //         nameLecture: lecture.nameLecture,
-      //         order: lecture.order ?? lectureIndex + 1,
-      //         video: videoUrl,
-      //       },
-      //     });
-      //   } else {
-      //     await this.prisma.lecture.create({
-      //       data: {
-      //         sectionId,
-      //         nameLecture: lecture.nameLecture,
-      //         order: lecture.order ?? lectureIndex + 1,
-      //         video: videoUrl,
-      //       },
-      //     });
-      //   }
-      // }
       for (const [lectureIndex, lecture] of section.lectures.entries()) {
         let videoUrl = lecture.video ?? ''; // giữ video cũ nếu có
         const hasExistingVideo = !!lecture.video;

@@ -12,7 +12,8 @@ import {
   UseInterceptors,
   UploadedFile,
   Req,
-  UseGuards
+  UseGuards,
+  Put
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -30,7 +31,7 @@ import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly cloudinary: CloudinaryService,
+    private readonly cloudinary: CloudinaryService
   ) { }
 
   @Post()
@@ -126,6 +127,7 @@ export class UsersController {
     return this.usersService.update(updateUserDto);
   }
 
+  // disable user account
   @Delete(':id')
   remove(@Param('id') id: string) {
     const userId = parseInt(id, 10);
@@ -140,5 +142,15 @@ export class UsersController {
   @Patch(':id/role/instructor')
   async updateRoleToInstructor(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.updateUserRole(id, 'INSTRUCTOR');
+  }
+
+  // enable user account
+  @Put('/:id')
+  async enableUserAccout(@Param('id') id: string) {
+    const userId = parseInt(id, 10);
+    if (isNaN(userId)) {
+      throw new BadRequestException('id is not valid');
+    }
+    return await this.usersService.enableUserAccount(userId);
   }
 }

@@ -1,14 +1,24 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { hashPasswordHelper } from 'src/helpers/util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import aqp from 'api-query-params';
 import { isValidId } from 'src/helpers/validate-id.util';
-import { ChangePasswordAuthDto, CodeAuthDto, CreateAuthDto } from 'src/auth/dto/create-auth.dto';
+import {
+  ChangePasswordAuthDto,
+  CodeAuthDto,
+  CreateAuthDto
+} from 'src/auth/dto/create-auth.dto';
 import { v4 as uuidv4 } from 'uuid';
 import * as dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
+import { User } from '@prisma/client';
 
 interface UpdateProfileDto {
   name: string;
@@ -17,23 +27,18 @@ interface UpdateProfileDto {
   imgPublicId?: string;
 }
 
-
-
 @Injectable()
 export class UsersService {
-
   constructor(
     private readonly prisma: PrismaService,
-    private readonly mailerService: MailerService,
-
+    private readonly mailerService: MailerService
   ) { }
-
 
   isEmailExist = async (email: string) => {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (user) return true;
     return false;
-  }
+  };
 
   convertAqpFilterToPrisma(filter: any): any {
     const prismaFilter: Record<string, any> = {};
@@ -44,13 +49,26 @@ export class UsersService {
         const sub: Record<string, any> = {};
         for (const op in value) {
           switch (op) {
-            case '$gte': sub['gte'] = value[op]; break;
-            case '$lte': sub['lte'] = value[op]; break;
-            case '$gt': sub['gt'] = value[op]; break;
-            case '$lt': sub['lt'] = value[op]; break;
-            case '$ne': sub['not'] = value[op]; break;
-            case '$eq': sub['equals'] = value[op]; break;
-            default: break;
+            case '$gte':
+              sub['gte'] = value[op];
+              break;
+            case '$lte':
+              sub['lte'] = value[op];
+              break;
+            case '$gt':
+              sub['gt'] = value[op];
+              break;
+            case '$lt':
+              sub['lt'] = value[op];
+              break;
+            case '$ne':
+              sub['not'] = value[op];
+              break;
+            case '$eq':
+              sub['equals'] = value[op];
+              break;
+            default:
+              break;
           }
         }
         prismaFilter[key] = sub;
@@ -107,8 +125,6 @@ export class UsersService {
   //   }
   // }
 
-
-
   async updateProfile(userId: number, data: UpdateProfileDto) {
     return this.prisma.user.update({
       where: { userId },
@@ -121,19 +137,20 @@ export class UsersService {
     })
   }
 
-
   async create(createUserDto: CreateUserDto) {
     try {
       const { name, email, password, gender } = createUserDto;
 
       // Kiểm tra user theo email (bao gồm cả user đã bị isDeleted)
       const existingUser = await this.prisma.user.findUnique({
-        where: { email },
+        where: { email }
       });
 
       // Nếu đã tồn tại và chưa bị xóa → không cho tạo lại
       if (existingUser && !existingUser.isDeleted) {
-        throw new BadRequestException(`Email đã tồn tại: ${email}. Vui lòng chọn email khác`);
+        throw new BadRequestException(
+          `Email đã tồn tại: ${email}. Vui lòng chọn email khác`
+        );
       }
 
       // Hash mật khẩu
@@ -148,8 +165,8 @@ export class UsersService {
             password: hashPassword,
             gender,
             isDeleted: false,
-            updatedAt: new Date(),
-          },
+            updatedAt: new Date()
+          }
         });
 
         return { id: recoveredUser.userId };
@@ -161,12 +178,11 @@ export class UsersService {
           name,
           email,
           password: hashPassword,
-          gender,
-        },
+          gender
+        }
       });
 
       return { id: user.userId };
-
     } catch (error) {
       console.error('Lỗi tạo user:', error);
 
@@ -178,32 +194,40 @@ export class UsersService {
     }
   }
 
-
   async findAll(
     limit: number,
     skip: number,
     role: string,
     searchText?: string
   ) {
-    const result = await this.prisma.user.findMany({
-      where: {
-        role: role,
-        isDeleted: false,
-        ...(searchText
-          ? {
-            name: {
-              contains: searchText.toLowerCase()
-            }
+    const where = {
+      role: role,
+      // isDeleted: false,
+      ...(searchText
+        ? {
+          name: {
+            contains: searchText.toLowerCase()
           }
-          : {})
-      },
+        }
+        : {})
+    };
+    const result = await this.prisma.user.findMany({
+      where: where,
       take: limit,
       skip: skip
     });
 
-    const userWithoutPassword = result.map(({ password, codeExpired, codeId, ...rest }) => rest);
+    const dataLength = (await this.prisma.user.findMany({ where: where }))
+      .length;
 
-    return userWithoutPassword;
+    const userWithoutPassword = result.map(
+      ({ password, codeExpired, codeId, ...rest }) => rest
+    );
+
+    return {
+      users: userWithoutPassword,
+      length: dataLength
+    };
   }
 
   async findOne(id: number) {
@@ -213,7 +237,7 @@ export class UsersService {
 
     const user = await this.prisma.user.findUnique({
       where: {
-        userId: id,
+        userId: id
       },
       select: {
         userId: true,
@@ -225,9 +249,9 @@ export class UsersService {
         imgPublicId: true,
         isActive: true,
         createdAt: true,
-        updatedAt: true,
+        updatedAt: true
         // Bỏ password, codeId, codeExpired
-      },
+      }
     });
 
     if (!user) {
@@ -238,8 +262,8 @@ export class UsersService {
     const deletedUser = await this.prisma.user.findFirst({
       where: {
         userId: id,
-        isDeleted: true,
-      },
+        isDeleted: true
+      }
     });
 
     if (deletedUser) {
@@ -255,7 +279,7 @@ export class UsersService {
     }
 
     const user = await this.prisma.user.findUnique({
-      where: { email },
+      where: { email }
     });
 
     if (!user) {
@@ -265,7 +289,6 @@ export class UsersService {
     return user;
   }
 
-
   async update(updateUserDto: UpdateUserDto) {
     const { id, name, biography, img, ...data } = updateUserDto;
     return await this.prisma.user.update({
@@ -273,17 +296,18 @@ export class UsersService {
       data: {
         ...(name && { name }),
         ...(biography && { biography }),
-        ...(img && { img }),
+        ...(img && { img })
       },
       select: {
         userId: true,
         name: true,
         biography: true,
-        img: true,
-      },
+        img: true
+      }
     });
   }
 
+  // disable user account: isDeleted: true
   async remove(id: number) {
     if (!isValidId(id)) {
       throw new BadRequestException('Id không đúng định dạng');
@@ -292,27 +316,57 @@ export class UsersService {
     try {
       // Check nếu user tồn tại và chưa bị xóa
       const user = await this.prisma.user.findFirst({
-        where: { userId: id, isDeleted: false },
+        where: { userId: id, isDeleted: false }
       });
 
       if (!user) {
-        throw new NotFoundException(`User với id ${id} không tồn tại hoặc đã bị xóa`);
+        throw new NotFoundException(
+          `User với id ${id} không tồn tại hoặc đã bị xóa`
+        );
       }
       // Soft delete
       return await this.prisma.user.update({
         where: { userId: id },
         data: {
-          isDeleted: true,
+          isDeleted: true
         },
         select: {
           userId: true,
           name: true,
-          isDeleted: true,
-        },
+          isDeleted: true
+        }
       });
-    }
-    catch (error) {
+    } catch (error) {
       throw new InternalServerErrorException('Lỗi không xác định');
+    }
+  }
+
+  // enable user account: isDeleted: false
+  async enableUserAccount(userId: number) {
+    try {
+      const accountDB: User | null = await this.prisma.user.findUnique({
+        where: {
+          userId: userId
+        }
+      });
+      if (!accountDB)
+        throw new NotFoundException(`Can not find user with id: ${userId}`);
+      if (!accountDB.isDeleted)
+        throw new NotFoundException(
+          `This account is enable, can not enable it!`
+        );
+      return await this.prisma.user.update({
+        where: {
+          userId: userId
+        },
+        data: {
+          isDeleted: false
+        }
+      });
+    } catch (e) {
+      throw new InternalServerErrorException(
+        `Can not enable account with id: ${userId}: ${e}`
+      );
     }
   }
 
@@ -322,12 +376,14 @@ export class UsersService {
 
       // Kiểm tra user theo email (bao gồm cả user đã bị isDeleted)
       const existingUser = await this.prisma.user.findUnique({
-        where: { email },
+        where: { email }
       });
 
       // Nếu đã tồn tại và chưa bị xóa → không cho tạo lại
       if (existingUser && !existingUser.isDeleted) {
-        throw new BadRequestException(`Email đã tồn tại: ${email}. Vui lòng chọn email khác`);
+        throw new BadRequestException(
+          `Email đã tồn tại: ${email}. Vui lòng chọn email khác`
+        );
       }
 
       // Hash mật khẩu
@@ -345,20 +401,20 @@ export class UsersService {
             codeId: codeId,
             codeExpired: dayjs().add(5, 'minutes').toDate(),
             isDeleted: false,
-            updatedAt: new Date(),
-          },
+            updatedAt: new Date()
+          }
         });
 
         //send email
         this.mailerService.sendMail({
           to: recoveredUser.email ?? undefined, // list of receivers
           subject: 'Activate your account at @EduMarket', // Subject line
-          template: "register.hbs", //file html
+          template: 'register.hbs', //file html
           context: {
             name: recoveredUser.name,
             activationCode: codeId
           }
-        })
+        });
 
         //trả ra phản hồi
         return { id: recoveredUser.userId };
@@ -373,24 +429,23 @@ export class UsersService {
           gender,
           isActive: false,
           codeId: codeId,
-          codeExpired: dayjs().add(5, 'minutes').toDate(),
-        },
+          codeExpired: dayjs().add(5, 'minutes').toDate()
+        }
       });
 
       //send email (bất đồng bộ)
       this.mailerService.sendMail({
         to: user.email ?? undefined, // list of receivers
         subject: 'Activate your account at @EduMarket', // Subject line
-        template: "register.hbs", //file html
+        template: 'register.hbs', //file html
         context: {
           name: user.name,
           activationCode: codeId
         }
-      })
+      });
 
       //trả ra phản hồi
       return { id: user.userId };
-
     } catch (error) {
       console.error('Lỗi tạo user:', error);
 
@@ -406,11 +461,11 @@ export class UsersService {
     const user = await this.prisma.user.findFirst({
       where: {
         userId: +data.userId,
-        codeId: data.code,
-      },
+        codeId: data.code
+      }
     });
     if (!user) {
-      throw new BadRequestException("Mã code không hợp lệ hoặc đã hết hạn")
+      throw new BadRequestException('Mã code không hợp lệ hoặc đã hết hạn');
     }
     //check expire code
     const isBeforeCheck = dayjs().isBefore(user.codeExpired);
@@ -419,24 +474,24 @@ export class UsersService {
       await this.prisma.user.update({
         where: { userId: +data.userId },
         data: {
-          isActive: true,
+          isActive: true
         }
-      })
+      });
       return { isBeforeCheck };
     } else {
-      throw new BadRequestException("Mã code không hợp lệ hoặc đã hết hạn")
+      throw new BadRequestException('Mã code không hợp lệ hoặc đã hết hạn');
     }
   }
 
   async retryActive(email: string) {
     const user = await this.prisma.user.findUnique({
       where: { email }
-    })
+    });
     if (!user) {
-      throw new BadRequestException("Tài khoản không tồn tại")
+      throw new BadRequestException('Tài khoản không tồn tại');
     }
     if (user.isActive) {
-      throw new BadRequestException("Tài khoản đã được kích hoạt")
+      throw new BadRequestException('Tài khoản đã được kích hoạt');
     }
     //update user
     const codeId = uuidv4();
@@ -444,28 +499,28 @@ export class UsersService {
       where: { email },
       data: {
         codeId: codeId,
-        codeExpired: dayjs().add(5, 'minutes').toDate(),
+        codeExpired: dayjs().add(5, 'minutes').toDate()
       }
-    })
+    });
     //send mail
     this.mailerService.sendMail({
       to: user.email ?? undefined, // list of receivers
       subject: 'Activate your account at @EduMarket', // Subject line
-      template: "register.hbs", //file html
+      template: 'register.hbs', //file html
       context: {
         name: user.name,
         activationCode: codeId
       }
-    })
+    });
     return { id: user?.userId };
   }
 
   async retryPassword(email: string) {
     const user = await this.prisma.user.findUnique({
       where: { email }
-    })
+    });
     if (!user) {
-      throw new BadRequestException("Tài khoản không tồn tại")
+      throw new BadRequestException('Tài khoản không tồn tại');
     }
 
     //update user
@@ -474,32 +529,34 @@ export class UsersService {
       where: { email },
       data: {
         codeId: codeId,
-        codeExpired: dayjs().add(5, 'minutes').toDate(),
+        codeExpired: dayjs().add(5, 'minutes').toDate()
       }
-    })
+    });
     //send mail
     this.mailerService.sendMail({
       to: user.email ?? undefined, // list of receivers
       subject: 'Change your password account at @EduMarket', // Subject line
-      template: "register.hbs", //file html
+      template: 'register.hbs', //file html
       context: {
         name: user.name,
         activationCode: codeId
       }
-    })
+    });
     return { id: user?.userId, email: user?.email };
   }
 
   async changePassword(data: ChangePasswordAuthDto) {
     if (data.confirmPassword !== data.password) {
-      throw new BadRequestException("Mật khẩu và xác nhận mật khẩu không chính xác")
+      throw new BadRequestException(
+        'Mật khẩu và xác nhận mật khẩu không chính xác'
+      );
     }
 
     let user = await this.prisma.user.findUnique({
       where: { email: data.email }
-    })
+    });
     if (!user) {
-      throw new BadRequestException("Tài khoản không tồn tại")
+      throw new BadRequestException('Tài khoản không tồn tại');
     }
 
     user = await this.prisma.user.findFirst({
@@ -515,16 +572,16 @@ export class UsersService {
     const isBeforeCheck = dayjs().isBefore(user.codeExpired);
     if (isBeforeCheck) {
       //valid => update password
-      const newPassword = await hashPasswordHelper(data.password)
+      const newPassword = await hashPasswordHelper(data.password);
       await this.prisma.user.update({
         where: { email: data.email },
         data: {
           password: newPassword
         }
-      })
+      });
       return { isBeforeCheck };
     } else {
-      throw new BadRequestException("Mã code không hợp lệ hoặc đã hết hạn")
+      throw new BadRequestException('Mã code không hợp lệ hoặc đã hết hạn');
     }
   }
 

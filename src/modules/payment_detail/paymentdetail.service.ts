@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Course, Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -28,5 +28,37 @@ export class PaymentDetailService {
       Can not get total price of payment ${paymentId}: ${e}  
       `);
     }
+  }
+
+  async getBestSellerCourse() {
+    const data = await this.prisma.paymentDetail.groupBy({
+      by: ['courseId'],
+      _count: {
+        couponId: true
+      },
+      _sum: {
+        final_price: true
+      },
+      orderBy: {
+        _count: {
+          couponId: 'desc'
+        }
+      }
+    });
+    const result = [];
+    const dataLen: number = data.length;
+    for (let i = 0; i < dataLen; i++) {
+      const courseInfor: Course | null = await this.prisma.course.findUnique({
+        where: {
+          courseId: data[i].courseId
+        }
+      });
+      result.push({
+        title: courseInfor ? courseInfor.title : 'Không xác định',
+        count: data[i]._count.couponId,
+        revenue: Number(data[i]._sum.final_price)
+      });
+    }
+    return result.length > 10 ? result.slice(0, 10) : result;
   }
 }

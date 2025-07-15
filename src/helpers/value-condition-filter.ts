@@ -95,7 +95,8 @@ export function getWhereOfNormalCoupon(
             }
           ]
         }
-      : {})
+      : {}),
+    isDeleted: false
   };
   return where;
 }

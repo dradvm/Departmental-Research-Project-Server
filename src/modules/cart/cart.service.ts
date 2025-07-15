@@ -86,8 +86,8 @@ export class CartService {
             thumbnail: cart.Course.thumbnail
           },
           teacher: {
-            userId: cart.User.userId.toString(),
-            userName: cart.User.name
+            userId: cart.Course.User?.userId.toString() || null,
+            userName: cart.Course.User?.name || 'Không xác định'
           }
         });
         originalPrice = originalPrice.add(cart.Course.price);

@@ -70,8 +70,8 @@ model Coupon {
 model CouponCourse {
   couponId   Int
   courseId   Int
-  isRunning  Boolean @default(false)
   isAccepted Boolean @default(false)
+  isDeleted  Boolean @default(false)
   Coupon     Coupon  @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Coupon")
   Course     Course  @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CouponCourse_Course")
 
@@ -87,7 +87,7 @@ model Course {
   description      String?            @db.Text
   price            Decimal            @db.Decimal(10, 2)
   isPublic         Boolean?
-  isAccepted       Boolean?
+  isAccepted       Boolean?           @default(false)
   thumbnail        String?            @db.Text
   requirement      String?            @db.Text
   targetAudience   String?            @db.Text
@@ -103,7 +103,6 @@ model Course {
   PaymentDetail    PaymentDetail[]
   Review           Review[]
   Section          Section[]
-  StudyRemind      StudyRemind[]
   Wishlist         Wishlist[]
 
   @@index([userId], map: "fk_Course_User")
@@ -222,11 +221,9 @@ model NotificationReceiver {
 model Payment {
   paymentId     Int             @id @default(autoincrement())
   timePayment   DateTime        @db.DateTime(0)
-  totalPrice    Decimal         @db.Decimal(10, 2)
   userId        Int
   couponId      Int?
   final_price   Decimal         @default(0.00) @db.Decimal(10, 2)
-  originalPrice Decimal         @default(0.00) @db.Decimal(10, 2)
   User          User            @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Payment_User")
   Coupon        Coupon?         @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_coupon")
   PaymentDetail PaymentDetail[]
@@ -303,16 +300,20 @@ model Section {
 }
 
 model StudyRemind {
-  studyRemindId Int       @id @default(autoincrement())
-  userId        Int?
-  courseId      Int?
-  timeRemind    DateTime? @db.DateTime(0)
-  typeRemind    String?   @db.VarChar(100)
-  Course        Course?   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyRemind_Course")
-  User          User?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyRemind_User")
+  studyRemindId  Int                   @id @default(autoincrement())
+  userId         Int
+  googleEventId  String                @db.VarChar(255)
+  summary        String                @db.VarChar(255)
+  description    String?               @db.Text
+  time           DateTime              @db.DateTime(0)
+  frequency      StudyRemind_frequency
+  daysOfWeek     String?               @db.VarChar(20)
+  recurrenceRule String?               @db.VarChar(255)
+  createdAt      DateTime?             @default(now()) @db.DateTime(0)
+  updatedAt      DateTime?             @default(now()) @db.DateTime(0)
+  User           User                  @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_StudyRemind_User")
 
-  @@index([courseId], map: "fk_StudyRemind_Course")
-  @@index([userId], map: "fk_StudyRemind_User")
+  @@index([userId], map: "FK_StudyRemind_User")
 }
 
 model User {
@@ -426,4 +427,10 @@ model QuestionImage {
   Question   Question @relation(fields: [questionId], references: [questionId], onDelete: NoAction, onUpdate: NoAction, map: "QuestionImage_ibfk_1")
 
   @@id([questionId, publicId])
+}
+
+enum StudyRemind_frequency {
+  onetime
+  daily
+  weekly
 }
