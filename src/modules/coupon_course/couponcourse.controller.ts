@@ -2,15 +2,16 @@ import {
   Body,
   Controller,
   Get,
-  Param,
   Post,
   Put,
+  Req,
   UseGuards
 } from '@nestjs/common';
 import { CouponCourseService } from './couponcourse.service';
 import { CouponCourse } from '@prisma/client';
 import { CouponCourseCreateDto } from './dto/create-couponcourse';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
+import { ApiRequestData } from 'src/common/base/api.request';
 
 @Controller('couponcourse')
 export class CouponCourseController {
@@ -23,16 +24,26 @@ export class CouponCourseController {
     return await this.couponCourseService.addOneCouponToCourse(data);
   }
 
-  // 1/ accept and activate a coupon to a course isRunning: false => true, isAccept: false => true
-  // 2/ activate a coupon to a course (ACCPETED) isRunning: false => true, isAccept: true (true => true)
+  // accept a coupon to a course
   @UseGuards(JwtAuthGuard)
-  @Put('/accept-and-activate')
-  async acceptAndActiveACouponCourse(
+  @Put('/accept')
+  async acceptACouponCourse(
     @Body() data: CouponCourseCreateDto
   ): Promise<CouponCourse> {
-    await this.couponCourseService.resetIsRunningForAllCouponOfACourse(
-      data.courseId
+    return await this.couponCourseService.updateOneCouponCourse(
+      data.couponId,
+      data.courseId,
+      true,
+      false
     );
+  }
+
+  // delete a coupon to a course
+  @UseGuards(JwtAuthGuard)
+  @Put('/delete')
+  async deldeteACouponCourse(
+    @Body() data: CouponCourseCreateDto
+  ): Promise<CouponCourse> {
     return await this.couponCourseService.updateOneCouponCourse(
       data.couponId,
       data.courseId,
@@ -41,44 +52,12 @@ export class CouponCourseController {
     );
   }
 
-  // 3/ accept a coupon to a course (ONLY ACCEPT NOT ACTIVATE) isRunning: false, isAccept: false => true
+  // get all coupon-course of teacher
   @UseGuards(JwtAuthGuard)
-  @Put('/only-accept')
-  async acceptACouponCourse(
-    @Body() data: CouponCourseCreateDto
-  ): Promise<CouponCourse> {
-    await this.couponCourseService.resetIsRunningForAllCouponOfACourse(
-      data.courseId
-    );
-    return await this.couponCourseService.updateOneCouponCourse(
-      data.couponId,
-      data.courseId,
-      false,
-      true
-    );
-  }
-
-  // 4/ deactivate a coupon to a course (ACCEPTED) isRunning: true => false, isAccept: true
-  @UseGuards(JwtAuthGuard)
-  @Put('/deactivate')
-  async deactivateACouponCourse(
-    @Body() data: CouponCourseCreateDto
-  ): Promise<CouponCourse> {
-    return await this.couponCourseService.updateOneCouponCourse(
-      data.couponId,
-      data.courseId,
-      false,
-      true
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('/all/:courseId')
+  @Get()
   async getAllCouponOfCourse(
-    @Param('courseId') courseId: string
+    @Req() req: ApiRequestData
   ): Promise<CouponCourse[]> {
-    return await this.couponCourseService.getAllCouponOfCourse(
-      parseInt(courseId)
-    );
+    return await this.couponCourseService.getAllCouponOfCourse(req.user.userId);
   }
 }

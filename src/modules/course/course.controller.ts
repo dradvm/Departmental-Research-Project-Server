@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Param,
   ParseIntPipe,
+  Put,
   Query,
   Req
 } from '@nestjs/common';
@@ -73,5 +75,41 @@ export class CourseController {
       req.user.userId,
       instructorId
     );
+  }
+
+  @Get()
+  async getAllCourses(
+    @Query('limit') limit: string,
+    @Query('skip') skip: string,
+    @Query('minTime') minTime?: string,
+    @Query('maxTime') maxTime?: string,
+    @Query('minLectureCount') minLectureCount?: string,
+    @Query('maxLectureCount') maxLectureCount?: string,
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
+    @Query('searchText') searchText?: string
+  ) {
+    return await this.courseService.getFilteredCoursesWithPagination(
+      parseInt(limit),
+      parseInt(skip),
+      minTime !== undefined ? parseInt(minTime) : undefined,
+      maxTime !== undefined ? parseInt(maxTime) : undefined,
+      minLectureCount !== undefined ? parseInt(minLectureCount) : undefined,
+      maxLectureCount !== undefined ? parseInt(maxLectureCount) : undefined,
+      minPrice !== undefined ? parseInt(minPrice) : undefined,
+      maxPrice !== undefined ? parseInt(maxPrice) : undefined,
+      searchText !== undefined ? searchText : undefined
+    );
+  }
+
+  // accpet: isAccept: true
+  @Put('/accept/:id')
+  async acceptCourse(@Param('id') id: string) {
+    const courseId: number = parseInt(id);
+    if (isNaN(courseId))
+      throw new BadRequestException(
+        `courseId is invalid, can not accept course with id: ${courseId}`
+      );
+    return this.courseService.acceptCourse(courseId);
   }
 }

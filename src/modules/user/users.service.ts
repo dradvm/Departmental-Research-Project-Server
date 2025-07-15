@@ -18,6 +18,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import * as dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
+import { User } from '@prisma/client';
 
 interface UpdateProfileDto {
   name: string;
@@ -197,27 +198,34 @@ export class UsersService {
     role: string,
     searchText?: string
   ) {
-    const result = await this.prisma.user.findMany({
-      where: {
-        role: role,
-        isDeleted: false,
-        ...(searchText
-          ? {
-              name: {
-                contains: searchText.toLowerCase()
-              }
+    const where = {
+      role: role,
+      // isDeleted: false,
+      ...(searchText
+        ? {
+            name: {
+              contains: searchText.toLowerCase()
             }
-          : {})
-      },
+          }
+        : {})
+    };
+    const result = await this.prisma.user.findMany({
+      where: where,
       take: limit,
       skip: skip
     });
+
+    const dataLength = (await this.prisma.user.findMany({ where: where }))
+      .length;
 
     const userWithoutPassword = result.map(
       ({ password, codeExpired, codeId, ...rest }) => rest
     );
 
-    return userWithoutPassword;
+    return {
+      users: userWithoutPassword,
+      length: dataLength
+    };
   }
 
   async findOne(id: number) {
@@ -296,6 +304,7 @@ export class UsersService {
     });
   }
 
+  // disable user account: isDeleted: true
   async remove(id: number) {
     if (!isValidId(id)) {
       throw new BadRequestException('Id không đúng định dạng');
@@ -326,6 +335,35 @@ export class UsersService {
       });
     } catch (error) {
       throw new InternalServerErrorException('Lỗi không xác định');
+    }
+  }
+
+  // enable user account: isDeleted: false
+  async enableUserAccount(userId: number) {
+    try {
+      const accountDB: User | null = await this.prisma.user.findUnique({
+        where: {
+          userId: userId
+        }
+      });
+      if (!accountDB)
+        throw new NotFoundException(`Can not find user with id: ${userId}`);
+      if (!accountDB.isDeleted)
+        throw new NotFoundException(
+          `This account is enable, can not enable it!`
+        );
+      return await this.prisma.user.update({
+        where: {
+          userId: userId
+        },
+        data: {
+          isDeleted: false
+        }
+      });
+    } catch (e) {
+      throw new InternalServerErrorException(
+        `Can not enable account with id: ${userId}: ${e}`
+      );
     }
   }
 

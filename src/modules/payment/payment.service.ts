@@ -14,7 +14,7 @@ import { CouponCourseService } from '../coupon_course/couponcourse.service';
 import { CouponService } from '../coupon/coupon.service';
 import { CartService } from '../cart/cart.service';
 import { PaymentDetailService } from '../payment_detail/paymentdetail.service';
-import { PaymentOutputDto } from './dto/output-payment';
+import { PaymentOutputRespone, PaymentOutputType } from './dto/output-payment';
 import { getFinalPrice } from 'src/helpers/calculate-discount-amount';
 
 @Injectable()
@@ -183,7 +183,7 @@ export class PaymentService {
     minPrice?: Decimal,
     maxPrice?: Decimal,
     userName?: string
-  ): Promise<PaymentOutputDto[]> {
+  ): Promise<PaymentOutputRespone> {
     try {
       const where = {
         userId: userId || undefined,
@@ -233,7 +233,9 @@ export class PaymentService {
           Coupon: true
         }
       });
-      const result = Promise.all(
+      const dataLength = (await this.prisma.payment.findMany({ where: where }))
+        .length;
+      const result: PaymentOutputType[] = await Promise.all(
         data.map(async (da) => {
           const figure: { originalPrice: Decimal; totalPrice: Decimal } =
             await this.paymentDetailService.getTotalPriceOfOnePayment(
@@ -259,7 +261,10 @@ export class PaymentService {
           };
         })
       );
-      return result;
+      return {
+        payments: result,
+        length: dataLength
+      };
     } catch (e) {
       throw new BadRequestException(`Can not get all payment: ${e}`);
     }
