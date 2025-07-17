@@ -40,7 +40,7 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('USERS')
+  @Roles('USERS', 'INSTRUCTOR')
   @Post('update-profile')
   @UseInterceptors(FileInterceptor('file'))
   async updateProfile(
