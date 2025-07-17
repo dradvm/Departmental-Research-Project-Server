@@ -7,7 +7,7 @@ export class OverviewController {
   constructor(
     private readonly paymentService: PaymentService,
     private readonly paymentDetailService: PaymentDetailService
-  ) {}
+  ) { }
 
   @Get('/revenue-by-month')
   async getRevenueByMonth() {

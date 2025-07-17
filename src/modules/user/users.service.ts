@@ -24,6 +24,7 @@ interface UpdateProfileDto {
   name: string;
   biography: string;
   img?: string;
+  imgPublicId?: string;
 }
 
 @Injectable()
@@ -31,7 +32,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailerService: MailerService
-  ) {}
+  ) { }
 
   isEmailExist = async (email: string) => {
     const user = await this.prisma.user.findUnique({ where: { email } });
@@ -130,9 +131,10 @@ export class UsersService {
       data: {
         name: data.name,
         biography: data.biography,
-        ...(data.img && { img: data.img })
-      }
-    });
+        ...(data.img && { img: data.img }),
+        ...(data.imgPublicId && { imgPublicId: data.imgPublicId }),
+      },
+    })
   }
 
   async create(createUserDto: CreateUserDto) {
@@ -203,10 +205,10 @@ export class UsersService {
       // isDeleted: false,
       ...(searchText
         ? {
-            name: {
-              contains: searchText.toLowerCase()
-            }
+          name: {
+            contains: searchText.toLowerCase()
           }
+        }
         : {})
     };
     const result = await this.prisma.user.findMany({
@@ -244,6 +246,7 @@ export class UsersService {
         gender: true,
         biography: true,
         img: true,
+        imgPublicId: true,
         isActive: true,
         createdAt: true,
         updatedAt: true
@@ -549,11 +552,20 @@ export class UsersService {
       );
     }
 
-    const user = await this.prisma.user.findUnique({
+    let user = await this.prisma.user.findUnique({
       where: { email: data.email }
     });
     if (!user) {
       throw new BadRequestException('Tài khoản không tồn tại');
+    }
+
+    user = await this.prisma.user.findFirst({
+      where: {
+        codeId: data.code,
+      },
+    });
+    if (!user) {
+      throw new BadRequestException("Mã code không hợp lệ hoặc đã hết hạn")
     }
 
     //check expire code
@@ -571,5 +583,20 @@ export class UsersService {
     } else {
       throw new BadRequestException('Mã code không hợp lệ hoặc đã hết hạn');
     }
+  }
+
+  async updateUserRole(userId: number, role: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { userId: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.prisma.user.update({
+      where: { userId: userId },
+      data: { role },
+    });
   }
 }

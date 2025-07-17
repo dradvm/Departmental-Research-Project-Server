@@ -18,7 +18,7 @@ import { CartOutputDto } from './dto/output-cart';
 
 @Controller('cart')
 export class CartController {
-  constructor(private readonly cartService: CartService) {}
+  constructor(private readonly cartService: CartService) { }
 
   @UseGuards(JwtAuthGuard)
   @Post()

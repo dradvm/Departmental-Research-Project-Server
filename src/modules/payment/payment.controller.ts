@@ -21,7 +21,7 @@ export class PaymentController {
   constructor(
     private readonly paymentService: PaymentService,
     private readonly stripeService: StripeService
-  ) {}
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @Post('/create-intent')
