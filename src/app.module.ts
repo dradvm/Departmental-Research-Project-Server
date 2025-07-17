@@ -32,6 +32,8 @@ import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { MessageModule } from './modules/message/message.module';
 import { OverviewModule } from './modules/overview/overview.module';
 import { CategoryModule } from './modules/category/category.module';
+import { GoogleModule } from './modules/google/google.module';
+import { StudyRemindModule } from './modules/study-remind/study-remind.module';
 
 @Module({
   imports: [
@@ -58,6 +60,8 @@ import { CategoryModule } from './modules/category/category.module';
     WishlistModule,
     MessageModule,
     CategoryModule,
+    GoogleModule,
+    StudyRemindModule,
     StripeModule.forRootAsync(),
     CacheModule.registerAsync({
       isGlobal: true,

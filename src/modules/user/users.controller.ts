@@ -25,6 +25,7 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/decorator/role.decorator';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
+import { ApiRequestData } from 'src/common/base/api.request';
 
 @UseInterceptors(TransformInterceptor)
 @Controller('users')
@@ -32,7 +33,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly cloudinary: CloudinaryService
-  ) { }
+  ) {}
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
@@ -59,21 +60,20 @@ export class UsersController {
       }
 
       const uploaded = await this.cloudinary.uploadImage(file, 'avatars');
-      img = uploaded?.secure_url
-      imgPublicId = uploaded?.public_id
-
+      img = uploaded?.secure_url;
+      imgPublicId = uploaded?.public_id;
     }
 
     await this.usersService.updateProfile(req.user.userId, {
       name: body.name,
       biography: body.biography,
       img: img ?? undefined,
-      imgPublicId: imgPublicId ?? undefined,
+      imgPublicId: imgPublicId ?? undefined
     });
 
     return {
       message: 'Profile updated successfully',
-      image: img,
+      image: img
     };
   }
 
@@ -99,7 +99,6 @@ export class UsersController {
   //     image: img,
   //   }
   // }
-
 
   @Get()
   async findAll(
@@ -138,10 +137,10 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('USERS', 'ADMIN')
-  @Patch(':id/role/instructor')
-  async updateRoleToInstructor(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.updateUserRole(id, 'INSTRUCTOR');
+  @Roles('USERS')
+  @Patch('/role/instructor')
+  async updateRoleToInstructorFormUser(@Req() req: ApiRequestData) {
+    return this.usersService.updateUserRole(req.user.userId, 'INSTRUCTOR');
   }
 
   // enable user account
