@@ -31,6 +31,8 @@ import { QAModule } from './modules/question_answer/qa.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { MessageModule } from './modules/message/message.module';
 import { OverviewModule } from './modules/overview/overview.module';
+import { GoogleModule } from './modules/google/google.module';
+import { StudyRemindModule } from './modules/study-remind/study-remind.module';
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { OverviewModule } from './modules/overview/overview.module';
     QAModule,
     WishlistModule,
     MessageModule,
+    GoogleModule,
+    StudyRemindModule,
     StripeModule.forRootAsync(),
     CacheModule.registerAsync({
       isGlobal: true,
