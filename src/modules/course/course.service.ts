@@ -67,6 +67,13 @@ export class CourseService {
         price: new Prisma.Decimal(dto.price),
         isPublic: dto.isPublic ?? false,
         thumbnail: thumbnailUrl,
+
+        CourseCategory: {
+          create: dto.categoryIds.map((categoryId) => ({
+            categoryId,
+          })),
+        },
+
         Section: {
           create: await Promise.all(
             dto.sections.map(async (section, sectionIndex) => ({
@@ -98,6 +105,11 @@ export class CourseService {
       include: {
         Section: {
           include: { Lecture: true },
+        },
+        CourseCategory: {
+          include: {
+            Category: true,
+          },
         },
       },
     });
@@ -375,6 +387,22 @@ export class CourseService {
         ...(thumbnailUrl && { thumbnail: thumbnailUrl }),
       },
     });
+
+    if (dto.categoryIds && dto.categoryIds.length > 0) {
+      // Xóa tất cả Category cũ của course
+      await this.prisma.courseCategory.deleteMany({
+        where: { courseId },
+      });
+
+      // Gắn lại Category mới
+      await this.prisma.courseCategory.createMany({
+        data: dto.categoryIds.map((categoryId) => ({
+          courseId,
+          categoryId,
+        })),
+        skipDuplicates: true,
+      });
+    }
 
     // Lấy dữ liệu cũ
     const existingSections = await this.prisma.section.findMany({

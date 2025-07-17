@@ -18,4 +18,5 @@ export class UpdateCourseDto {
       time?: number;
     }[];
   }[];
+  categoryIds: number[]; //
 }

@@ -31,6 +31,7 @@ import { QAModule } from './modules/question_answer/qa.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { MessageModule } from './modules/message/message.module';
 import { OverviewModule } from './modules/overview/overview.module';
+import { CategoryModule } from './modules/category/category.module';
 import { GoogleModule } from './modules/google/google.module';
 import { StudyRemindModule } from './modules/study-remind/study-remind.module';
 
@@ -58,6 +59,7 @@ import { StudyRemindModule } from './modules/study-remind/study-remind.module';
     QAModule,
     WishlistModule,
     MessageModule,
+    CategoryModule,
     GoogleModule,
     StudyRemindModule,
     StripeModule.forRootAsync(),
@@ -119,4 +121,4 @@ import { StudyRemindModule } from './modules/study-remind/study-remind.module';
     // },
   ]
 })
-export class AppModule {}
+export class AppModule { }
