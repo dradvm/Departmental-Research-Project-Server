@@ -12,6 +12,8 @@ export class CreateCourseDto {
     description?: string;
     @IsOptional()
     requirement?: string;
+    @IsOptional()
+    targetAudience: string;
     @IsNotEmpty()
     price: number;
     @IsOptional()

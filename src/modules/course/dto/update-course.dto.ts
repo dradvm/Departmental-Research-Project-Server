@@ -3,6 +3,7 @@ export class UpdateCourseDto {
   subTitle: string;
   description: string;
   requirement: string;
+  targetAudience: string; //
   price: number;
   isPublic: boolean;
   sections: {
@@ -14,7 +15,7 @@ export class UpdateCourseDto {
       nameLecture: string;
       video?: string;
       order: number;
-      time?: string;
+      time?: number;
     }[];
   }[];
 }

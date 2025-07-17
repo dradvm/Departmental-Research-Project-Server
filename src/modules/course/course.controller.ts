@@ -74,19 +74,6 @@ export class CourseController {
     );
   }
 
-  // @Post('create-full')
-  // @Public()
-  // @UseInterceptors(
-  //   FileFieldsInterceptor([{ name: 'videos', maxCount: 100 }]),
-  // )
-  // async createFullCourse(
-  //   @UploadedFiles() files: { videos?: Express.Multer.File[] },
-  //   @Body() dto: CreateCourseDto,
-  // ) {
-  //   const videoFiles = files?.videos ?? [];
-  //   return this.courseService.createCourseWithContent(dto, videoFiles);
-  // }
-
   @Post('create-full')
   @Public()
   @UseInterceptors(FileFieldsInterceptor([
@@ -99,6 +86,7 @@ export class CourseController {
     @Body('subTitle') subTitle: string, //
     @Body('description') description: string,
     @Body('requirement') requirement: string, //
+    @Body('targetAudience') targetAudience: string, //
     @Body('price') price: string,
     @Body('isPublic') isPublic: string,
     @Body('sections') sectionsRaw: string,
@@ -118,6 +106,7 @@ export class CourseController {
       subTitle, //
       description,
       requirement, //
+      targetAudience, //
       price: parseFloat(price),
       isPublic: isPublic === 'true',
       sections,
@@ -184,6 +173,7 @@ export class CourseController {
     @Body('subTitle') subTitle: string,
     @Body('description') description: string,
     @Body('requirement') requirement: string,
+    @Body('targetAudience') targetAudience: string, //
     @Body('price') price: string,
     @Body('isPublic') isPublic: string,
     @Body('sections') sectionsRaw: string,
@@ -202,6 +192,7 @@ export class CourseController {
       subTitle,
       description,
       requirement,
+      targetAudience, //
       price: parseFloat(price),
       isPublic: isPublic === 'true',
       sections,
@@ -216,5 +207,13 @@ export class CourseController {
     return this.courseService.updateCourseWithContent(courseId, dto, files?.videos || [], thumbnailUrl);
   }
 
+  @Get('revenue/:userId')
+  async getRevenueByUser(@Param('userId') userIdRaw: string) {
+    const userId = Number(userIdRaw);
+    if (!userId || isNaN(userId)) {
+      throw new BadRequestException('userId không hợp lệ');
+    }
+    return this.courseService.getRevenueByUser(userId);
+  }
 
 }

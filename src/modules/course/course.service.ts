@@ -63,6 +63,7 @@ export class CourseService {
         subTitle: dto.subTitle,
         description: dto.description,
         requirement: dto.requirement, //
+        targetAudience: dto.targetAudience, //
         price: new Prisma.Decimal(dto.price),
         isPublic: dto.isPublic ?? false,
         thumbnail: thumbnailUrl,
@@ -368,6 +369,7 @@ export class CourseService {
         subTitle: dto.subTitle,
         description: dto.description,
         requirement: dto.requirement,
+        targetAudience: dto.targetAudience, //
         price: new Prisma.Decimal(dto.price),
         isPublic: dto.isPublic,
         ...(thumbnailUrl && { thumbnail: thumbnailUrl }),
@@ -449,6 +451,7 @@ export class CourseService {
               nameLecture: lecture.nameLecture,
               order: lecture.order ?? lectureIndex + 1,
               video: videoUrl,
+              time: lecture.time ?? 0, //
             },
           });
         } else {
@@ -458,6 +461,7 @@ export class CourseService {
               nameLecture: lecture.nameLecture,
               order: lecture.order ?? lectureIndex + 1,
               video: videoUrl,
+              time: lecture.time ?? 0, //
             },
           });
         }
@@ -473,7 +477,46 @@ export class CourseService {
     });
   }
 
+  async getRevenueByUser(userId: number) {
+    // Lấy các courseId thuộc user này
+    const courses = await this.prisma.course.findMany({
+      where: {
+        userId: userId,
+      },
+      select: {
+        courseId: true,
+        title: true,
+      },
+    });
 
+    // Lấy doanh thu và lượt mua theo courseId
+    const revenueData = await this.prisma.paymentDetail.groupBy({
+      by: ['courseId'],
+      _sum: {
+        final_price: true,
+      },
+      _count: {
+        paymentId: true,
+      },
+      where: {
+        courseId: {
+          in: courses.map((c) => c.courseId),
+        },
+      },
+    });
 
+    // Map dữ liệu thành dạng thống kê
+    const result = courses.map((course) => {
+      const stat = revenueData.find((r) => r.courseId === course.courseId);
+      return {
+        courseId: course.courseId,
+        course: course.title,
+        revenue: stat?._sum.final_price ?? 0,
+        totalEnrollments: stat?._count.paymentId ?? 0,
+      };
+    });
+
+    return result;
+  }
 
 }
