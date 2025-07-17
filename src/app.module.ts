@@ -31,6 +31,7 @@ import { QAModule } from './modules/question_answer/qa.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { MessageModule } from './modules/message/message.module';
 import { OverviewModule } from './modules/overview/overview.module';
+import { CategoryModule } from './modules/category/category.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { OverviewModule } from './modules/overview/overview.module';
     QAModule,
     WishlistModule,
     MessageModule,
+    CategoryModule,
     StripeModule.forRootAsync(),
     CacheModule.registerAsync({
       isGlobal: true,
@@ -115,4 +117,4 @@ import { OverviewModule } from './modules/overview/overview.module';
     // },
   ]
 })
-export class AppModule {}
+export class AppModule { }
