@@ -6,6 +6,7 @@ export class MessageService {
   constructor(private prisma: PrismaService) {}
 
   getThreads(userId: number) {
+    console.log(userId);
     return this.prisma.user.findMany({
       where: {
         userId: {
@@ -36,12 +37,18 @@ export class MessageService {
         isActive: true,
 
         Message_Message_userSenderIdToUser: {
+          where: {
+            userReceiverId: userId
+          },
           orderBy: {
             timeSend: 'desc'
           },
           take: 1
         },
         Message_Message_userReceiverIdToUser: {
+          where: {
+            userSenderId: userId
+          },
           orderBy: {
             timeSend: 'desc'
           },

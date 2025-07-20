@@ -1,4 +1,20 @@
-import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query, Req, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Put,
+  Query,
+  Req,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors
+} from '@nestjs/common';
 import { CourseService } from './course.service';
 import { LectureService } from './lecture.service';
 import { ReviewService } from './review.service';
@@ -9,7 +25,7 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
 import { ApiRequestData } from 'src/common/base/api.request';
 import { UpdateCourseDto } from './dto/update-course.dto';
-
+import { CategoryService } from './category.service';
 
 @Controller('courses')
 export class CourseController {
@@ -17,8 +33,9 @@ export class CourseController {
     private readonly courseService: CourseService,
     private readonly lectureService: LectureService,
     private readonly reviewService: ReviewService,
+    private readonly categoryService: CategoryService,
     private readonly cloudinaryService: CloudinaryService
-  ) { }
+  ) {}
 
   @Get('me')
   async getMyCourses(@Req() req: ApiRequestData) {
@@ -31,6 +48,46 @@ export class CourseController {
     return this.courseService.getCoursesByUser(userId);
   }
 
+  @Get('categories')
+  @Public()
+  getCategories() {
+    return this.categoryService.getAll();
+  }
+  @Get()
+  async getAllCourses(
+    @Query('limit') limit: string,
+    @Query('skip') skip: string,
+    @Query('minTime') minTime?: string,
+    @Query('maxTime') maxTime?: string,
+    @Query('minLectureCount') minLectureCount?: string,
+    @Query('maxLectureCount') maxLectureCount?: string,
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
+    @Query('searchText') searchText?: string
+  ) {
+    return await this.courseService.getFilteredCoursesWithPagination(
+      parseInt(limit),
+      parseInt(skip),
+      minTime !== undefined ? parseInt(minTime) : undefined,
+      maxTime !== undefined ? parseInt(maxTime) : undefined,
+      minLectureCount !== undefined ? parseInt(minLectureCount) : undefined,
+      maxLectureCount !== undefined ? parseInt(maxLectureCount) : undefined,
+      minPrice !== undefined ? parseInt(minPrice) : undefined,
+      maxPrice !== undefined ? parseInt(maxPrice) : undefined,
+      searchText !== undefined ? searchText : undefined
+    );
+  }
+
+  // accpet: isAccept: true
+  @Put('/accept/:id')
+  async acceptCourse(@Param('id') id: string) {
+    const courseId: number = parseInt(id);
+    if (isNaN(courseId))
+      throw new BadRequestException(
+        `courseId is invalid, can not accept course with id: ${courseId}`
+      );
+    return this.courseService.acceptCourse(courseId);
+  }
   @Get('/:courseId')
   getCourseById(@Param('courseId', ParseIntPipe) courseId: number) {
     return this.courseService.findById(courseId);
@@ -61,6 +118,11 @@ export class CourseController {
     );
   }
 
+  @Get('/:courseId/price')
+  getCoursePrice(@Param('courseId', ParseIntPipe) courseId: number) {
+    return this.courseService.getCoursePrice(courseId);
+  }
+
   @Get('/:courseId/reviews/total')
   getTotalReviews(
     @Param('courseId', ParseIntPipe) courseId: number,
@@ -74,12 +136,51 @@ export class CourseController {
     );
   }
 
+  @Get('/:courseId/review')
+  getReviewByUserIdAndCourseId(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Req() req: ApiRequestData
+  ) {
+    return this.reviewService.getReviewByUserIdAndCourseId(
+      req.user.userId,
+      courseId
+    );
+  }
+  @Post('/reviews')
+  createReview(
+    @Body('courseId', ParseIntPipe) courseId: number,
+    @Body('rating', ParseIntPipe) rating: number,
+    @Body('review') review: string,
+    @Req() req: ApiRequestData
+    // @Body('reviewId', ParseIntPipe) reviewId?: number
+  ) {
+    return this.reviewService.createReview(
+      req.user.userId,
+      courseId,
+      rating,
+      review
+    );
+  }
+  @Patch('/reviews/:reviewId')
+  updateReview(
+    @Param('reviewId', ParseIntPipe) reviewId: number,
+    @Body('rating', ParseIntPipe) rating: number,
+    @Body('review') review: string
+  ) {
+    return this.reviewService.updateReview(reviewId, rating, review);
+  }
+  @Delete('/reviews/:reviewId')
+  deleteReview(@Param('reviewId', ParseIntPipe) reviewId: number) {
+    return this.reviewService.deleteReview(reviewId);
+  }
   @Post('create-full')
   @Public()
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'videos' },
-    { name: 'thumbnail', maxCount: 1 },
-  ]))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'videos' },
+      { name: 'thumbnail', maxCount: 1 }
+    ])
+  )
   async createFullCourse(
     @Body('userId', ParseIntPipe) userId: number,
     @Body('title') title: string,
@@ -90,7 +191,8 @@ export class CourseController {
     @Body('price') price: string,
     @Body('isPublic') isPublic: string,
     @Body('sections') sectionsRaw: string,
-    @UploadedFiles() files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] },
+    @UploadedFiles()
+    files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] }
   ) {
     let sections;
 
@@ -109,64 +211,33 @@ export class CourseController {
       targetAudience, //
       price: parseFloat(price),
       isPublic: isPublic === 'true',
-      sections,
+      sections
     };
 
     // Upload thumbnail nếu có
     let thumbnailUrl: string | undefined = undefined;
     if (files.thumbnail?.[0]) {
-      const uploaded = await this.cloudinaryService.uploadImage(files.thumbnail[0], 'course-thumbnails');
+      const uploaded = await this.cloudinaryService.uploadImage(
+        files.thumbnail[0],
+        'course-thumbnails'
+      );
       thumbnailUrl = uploaded.secure_url;
     }
 
-    return this.courseService.createCourseWithContent(dto, files?.videos || [], thumbnailUrl);
+    return this.courseService.createCourseWithContent(
+      dto,
+      files?.videos || [],
+      thumbnailUrl
+    );
   }
 
-  // @Put('update-full/:id')
-  // @UseInterceptors(
-  //   FileFieldsInterceptor([
-  //     { name: 'thumbnail', maxCount: 1 },
-  //     { name: 'videos', maxCount: 100 },
-  //   ]),
-  // )
-  // async updateFullCourse(
-  //   @Param('id') id: string,
-  //   @UploadedFiles()
-  //   files: {
-  //     thumbnail?: Express.Multer.File[];
-  //     videos?: Express.Multer.File[];
-  //   },
-  //   @Body() body: any,
-  //   @Req() req: ApiRequestData,
-  // ) {
-  //   return this.courseService.updateFullCourse(+id, req.user.userId, body, files);
-  // }
-
-  // @Put('update-full/:id')
-  // @UseInterceptors(
-  //   FileFieldsInterceptor([
-  //     { name: 'thumbnail', maxCount: 1 },
-  //     { name: 'videos', maxCount: 100 },
-  //   ]),
-  // )
-  // async updateFullCourse(
-  //   @Param('id') id: string,
-  //   @UploadedFiles()
-  //   files: {
-  //     thumbnail?: Express.Multer.File[];
-  //     videos?: Express.Multer.File[];
-  //   },
-  //   @Body() body: any,
-  //   @Req() req: ApiRequestData,
-  // ) {
-  //   return this.courseService.updateFullCourse(+id, req.user.userId, body, files);
-  // }
-
   @Patch('update-full/:id')
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'videos' },
-    { name: 'thumbnail', maxCount: 1 },
-  ]))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'videos' },
+      { name: 'thumbnail', maxCount: 1 }
+    ])
+  )
   async updateFullCourse(
     @Param('id', ParseIntPipe) courseId: number,
     @Body('title') title: string,
@@ -177,7 +248,8 @@ export class CourseController {
     @Body('price') price: string,
     @Body('isPublic') isPublic: string,
     @Body('sections') sectionsRaw: string,
-    @UploadedFiles() files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] },
+    @UploadedFiles()
+    files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] }
   ) {
     let sections;
     try {
@@ -195,16 +267,24 @@ export class CourseController {
       targetAudience, //
       price: parseFloat(price),
       isPublic: isPublic === 'true',
-      sections,
+      sections
     };
 
     let thumbnailUrl: string | undefined;
     if (files.thumbnail?.[0]) {
-      const uploaded = await this.cloudinaryService.uploadImage(files.thumbnail[0], 'course-thumbnails');
+      const uploaded = await this.cloudinaryService.uploadImage(
+        files.thumbnail[0],
+        'course-thumbnails'
+      );
       thumbnailUrl = uploaded.secure_url;
     }
 
-    return this.courseService.updateCourseWithContent(courseId, dto, files?.videos || [], thumbnailUrl);
+    return this.courseService.updateCourseWithContent(
+      courseId,
+      dto,
+      files?.videos || [],
+      thumbnailUrl
+    );
   }
 
   @Get('revenue/:userId')
@@ -216,4 +296,9 @@ export class CourseController {
     return this.courseService.getRevenueByUser(userId);
   }
 
+  @Get('category/:categoryId')
+  @Public()
+  getCoursesByCategory(@Param('categoryId', ParseIntPipe) categoryId: number) {
+    return this.courseService.getCoursesByCategory(categoryId);
+  }
 }
