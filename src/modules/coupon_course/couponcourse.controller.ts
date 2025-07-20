@@ -1,7 +1,9 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Put,
   Req,
@@ -9,7 +11,10 @@ import {
 } from '@nestjs/common';
 import { CouponCourseService } from './couponcourse.service';
 import { CouponCourse } from '@prisma/client';
-import { CouponCourseCreateDto } from './dto/create-couponcourse';
+import {
+  CouponCourseCreateDto,
+  CreateCouponforACourseDto
+} from './dto/create-couponcourse';
 import { JwtAuthGuard } from 'src/auth/passport/jwt-auth.guard';
 import { ApiRequestData } from 'src/common/base/api.request';
 
@@ -17,11 +22,16 @@ import { ApiRequestData } from 'src/common/base/api.request';
 export class CouponCourseController {
   constructor(private readonly couponCourseService: CouponCourseService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   async createOneCouponCourse(
-    @Body() data: CouponCourseCreateDto
+    @Req() req: ApiRequestData,
+    @Body() data: CreateCouponforACourseDto
   ): Promise<CouponCourse | null> {
-    return await this.couponCourseService.addOneCouponToCourse(data);
+    return await this.couponCourseService.addOneCouponToCourse(
+      req.user.userId,
+      data
+    );
   }
 
   // accept a coupon to a course
@@ -59,5 +69,14 @@ export class CouponCourseController {
     @Req() req: ApiRequestData
   ): Promise<CouponCourse[]> {
     return await this.couponCourseService.getAllCouponOfCourse(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/check/isApplying/:id')
+  async checkIsAppylingCoupon(@Param('id') id: string): Promise<boolean> {
+    const courseId: number = parseInt(id);
+    if (isNaN(courseId))
+      throw new BadRequestException(`courseId: ${courseId} is not valid`);
+    return await this.couponCourseService.isApplyingCouponforCourse(courseId);
   }
 }

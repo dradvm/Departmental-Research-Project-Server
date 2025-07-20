@@ -27,9 +27,6 @@ export class CreateCouponDto {
   quantity: number;
 
   @IsNumber()
-  appliedAmount: number;
-
-  @IsNumber()
   minRequire: number;
 
   @IsNumber()
