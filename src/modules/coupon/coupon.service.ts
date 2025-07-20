@@ -10,9 +10,13 @@ import { GlobalCouponResponse } from './dto/output-coupon.dto';
 export class CouponService {
   constructor(private prisma: PrismaService) {}
 
-  async isExistingCode(code: string): Promise<boolean> {
+  async isExistingCode(
+    code: string,
+    tx?: Prisma.TransactionClient
+  ): Promise<boolean> {
     try {
-      const coupon = await this.prisma.coupon.findFirst({
+      const client = tx ?? this.prisma;
+      const coupon = await client.coupon.findFirst({
         where: { code: code }
       });
       if (coupon) return true;
@@ -32,17 +36,6 @@ export class CouponService {
       if (data.startDate > data.endDate)
         throw new BadRequestException(`startDate can not be after endaDate!`);
     }
-
-    if (data.appliedAmount > data.quantity) {
-      throw new BadRequestException(
-        `appliedAmount can not be more than quantity!`
-      );
-    }
-
-    if (data.appliedAmount < 0)
-      throw new BadRequestException(
-        `appliedAmount should be greater than or equal to 0`
-      );
 
     if (data.quantity < 0)
       throw new BadRequestException(
@@ -68,8 +61,6 @@ export class CouponService {
     if (data.type === CouponType.VOUCHER) {
       if (!data.code) throw new BadRequestException(`voucher must have a code`);
     }
-    // appliedAmount is not null
-    if (!data.appliedAmount) data.appliedAmount = 0;
     // set time for endDate
     const newEndDate = new Date(data.endDate);
     newEndDate.setHours(23, 59, 59, 0);
@@ -138,48 +129,35 @@ export class CouponService {
     }
   }
 
-  async createCoupon(userId: number, data: CreateCouponDto): Promise<Coupon> {
+  async createCoupon(
+    userId: number,
+    data: CreateCouponDto,
+    tx?: Prisma.TransactionClient
+  ): Promise<Coupon> {
     try {
+      const client = tx ?? this.prisma;
       const checkData: CreateCouponDto = this.getCheckedData(data);
-      const finalData = { ...checkData, userId: userId };
-      return await this.prisma.coupon.create({ data: finalData });
+      // check if code is valid
+      const couponCodeRegex = /^[a-zA-Z0-9]+$/;
+
+      if (!couponCodeRegex.test(checkData.code)) {
+        throw new BadRequestException(
+          `Coupon code "${data.code}" is invalid. Only English letters and numbers are allowed.`
+        );
+      }
+      // check if coupon's code is existing
+      const isExistingCode: boolean = await this.isExistingCode(
+        checkData.code,
+        tx
+      );
+      if (isExistingCode)
+        throw new BadRequestException(
+          `Can not create coupon because code is existing`
+        );
+      const finalData = { ...checkData, userId: userId, appliedAmount: 0 };
+      return await client.coupon.create({ data: finalData });
     } catch (e) {
       throw new BadRequestException(`Create coupon failed: ${e}`);
-    }
-  }
-
-  async updateCoupon(id: number, data: CreateCouponDto): Promise<Coupon> {
-    try {
-      const checkData: CreateCouponDto = this.getCheckedData(data);
-      return await this.prisma.coupon.update({
-        where: {
-          couponId: id
-        },
-        data: checkData
-      });
-    } catch (e) {
-      throw new BadRequestException(`Update coupon with id ${id} failed: ${e}`);
-    }
-  }
-
-  async deleteCoupon(id: number): Promise<Coupon> {
-    try {
-      return await this.prisma.coupon.delete({
-        where: {
-          couponId: id
-        }
-      });
-    } catch (e) {
-      throw new BadRequestException(`Delete coupon with id ${id} failed: ${e}`);
-    }
-  }
-
-  async deleteAllCoupons(): Promise<{ count: number }> {
-    try {
-      const deleted = await this.prisma.coupon.deleteMany();
-      return deleted;
-    } catch (e) {
-      throw new BadRequestException(`Delete all coupons failed: ${e}`);
     }
   }
 }

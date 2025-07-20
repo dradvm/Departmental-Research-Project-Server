@@ -20,4 +20,5 @@ export class CreateCourseDto {
     isPublic?: boolean;
     @IsNotEmpty()
     sections: CreateSectionDto[];
+    categoryIds: number[]; //
 }

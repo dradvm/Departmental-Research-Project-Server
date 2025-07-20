@@ -41,7 +41,7 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('USERS')
+  @Roles('USERS', 'INSTRUCTOR')
   @Post('update-profile')
   @UseInterceptors(FileInterceptor('file'))
   async updateProfile(
@@ -100,6 +100,8 @@ export class UsersController {
   //   }
   // }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Get()
   async findAll(
     @Query('limit') limit: string,
@@ -127,6 +129,8 @@ export class UsersController {
   }
 
   // disable user account
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Delete(':id')
   remove(@Param('id') id: string) {
     const userId = parseInt(id, 10);
@@ -144,6 +148,8 @@ export class UsersController {
   }
 
   // enable user account
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Put('/:id')
   async enableUserAccout(@Param('id') id: string) {
     const userId = parseInt(id, 10);

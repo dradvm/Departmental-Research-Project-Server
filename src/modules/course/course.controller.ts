@@ -191,16 +191,25 @@ export class CourseController {
     @Body('price') price: string,
     @Body('isPublic') isPublic: string,
     @Body('sections') sectionsRaw: string,
-    @UploadedFiles()
-    files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] }
+    @Body('categoryIds') categoryIdsRaw: string, //
+    @UploadedFiles() files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] },
   ) {
     let sections;
+    let categoryIds: number[];
 
     try {
       sections = JSON.parse(sectionsRaw);
     } catch {
       throw new BadRequestException('Invalid JSON in sections');
     }
+
+    try {
+      categoryIds = JSON.parse(categoryIdsRaw);
+      if (!Array.isArray(categoryIds)) throw new Error();
+    } catch {
+      throw new BadRequestException('Invalid JSON in categoryIds');
+    }
+
 
     const dto: CreateCourseDto = {
       userId,
@@ -211,7 +220,8 @@ export class CourseController {
       targetAudience, //
       price: parseFloat(price),
       isPublic: isPublic === 'true',
-      sections
+      sections,
+      categoryIds,
     };
 
     // Upload thumbnail nếu có
@@ -248,15 +258,23 @@ export class CourseController {
     @Body('price') price: string,
     @Body('isPublic') isPublic: string,
     @Body('sections') sectionsRaw: string,
-    @UploadedFiles()
-    files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] }
+    @Body('categoryIds') categoryIdsRaw: string, //
+    @UploadedFiles() files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] },
   ) {
     let sections;
+    let categoryIds: number[] = [];
+
     try {
       sections = JSON.parse(sectionsRaw);
       console.log('Parsed sections:', sections);
     } catch {
       throw new BadRequestException('Invalid sections JSON');
+    }
+
+    try {
+      categoryIds = JSON.parse(categoryIdsRaw || '[]');
+    } catch {
+      throw new BadRequestException('Invalid JSON in categoryIds');
     }
 
     const dto: UpdateCourseDto = {
@@ -267,7 +285,8 @@ export class CourseController {
       targetAudience, //
       price: parseFloat(price),
       isPublic: isPublic === 'true',
-      sections
+      sections,
+      categoryIds, //
     };
 
     let thumbnailUrl: string | undefined;
