@@ -1,12 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Coupon, CouponCourse, Course, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CouponCourseCreateDto } from './dto/create-couponcourse';
+import { CreateCouponforACourseDto } from './dto/create-couponcourse';
 import {
   NormalCouponOutputDto,
   NormalCouponResponse
 } from '../coupon/dto/output-coupon.dto';
 import { getWhereOfNormalCoupon } from 'src/helpers/value-condition-filter';
+import { CouponService } from '../coupon/coupon.service';
 
 type CouponCourseWithRelations = CouponCourse & {
   Coupon: Coupon;
@@ -15,23 +16,55 @@ type CouponCourseWithRelations = CouponCourse & {
 
 @Injectable()
 export class CouponCourseService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private couponService: CouponService
+  ) {}
 
   async addOneCouponToCourse(
-    dataReq: CouponCourseCreateDto
+    userId: number,
+    dataReq: CreateCouponforACourseDto
   ): Promise<CouponCourse> {
-    try {
+    return await this.prisma.$transaction(async (tx) => {
+      const { courseId, ...couponReq } = dataReq;
+      // check if this course is existing
+      const course: Course | null = await tx.course.findUnique({
+        where: { courseId }
+      });
+      if (!course)
+        throw new BadRequestException(
+          `Can not create couponcourse because course is not existing`
+        );
+      // check if this course is requesting a coupon or applying a coupon
+      const isApplying: boolean = await this.isApplyingCouponforCourse(
+        courseId,
+        tx
+      );
+      if (isApplying)
+        throw new BadRequestException(
+          `Can not create couponcourse because this course is applying or requesting a coupon`
+        );
+      // add a new coupon and check if it exists
+      const coupon: Coupon = await this.couponService.createCoupon(
+        userId,
+        couponReq,
+        tx
+      );
+      if (!coupon)
+        throw new BadRequestException(
+          `Can not create couponcourse because could not create coupon`
+        );
       const data = {
-        ...dataReq,
+        courseId: courseId,
+        couponId: coupon.couponId,
         isAccepted: false,
         isDeleted: false
       };
-      return await this.prisma.couponCourse.create({ data });
-    } catch (e) {
-      throw new BadRequestException(
-        `Can not add a coupon to this course: ${e}`
-      );
-    }
+      const couponcourse: CouponCourse = await tx.couponCourse.create({ data });
+      if (!couponcourse)
+        throw new BadRequestException(`Can not create couponcourse`);
+      return couponcourse;
+    });
   }
 
   async updateOneCouponCourse(
@@ -80,6 +113,24 @@ export class CouponCourseService {
         `Can not get a running coupon for course: ${e}`
       );
     }
+  }
+
+  // check if a course is requesting or applying a coupon
+  async isApplyingCouponforCourse(
+    courseId: number,
+    tx?: Prisma.TransactionClient
+  ): Promise<boolean> {
+    const client = tx ?? this.prisma;
+    const couponcourseList: CouponCourse[] = await client.couponCourse.findMany(
+      {
+        where: {
+          courseId: courseId,
+          isDeleted: false
+        }
+      }
+    );
+    if (couponcourseList.length > 0) return true;
+    return false;
   }
 
   async getAllCouponOfCourse(userId: number): Promise<CouponCourse[]> {

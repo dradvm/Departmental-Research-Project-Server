@@ -15,13 +15,15 @@ import { ApiRequestData } from 'src/common/base/api.request';
 import { StripeService } from '../stripe/stripe.service';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PaymentOutputRespone } from './dto/output-payment';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from 'src/decorator/role.decorator';
 
 @Controller('payment')
 export class PaymentController {
   constructor(
     private readonly paymentService: PaymentService,
     private readonly stripeService: StripeService
-  ) { }
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('/create-intent')
@@ -70,6 +72,8 @@ export class PaymentController {
   }
 
   // admin feature
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Get()
   async getAllPayment(
     @Query('limit') limit: string,

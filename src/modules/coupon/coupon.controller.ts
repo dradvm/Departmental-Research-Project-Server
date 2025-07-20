@@ -1,12 +1,10 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   NotFoundException,
   Param,
   Post,
-  Put,
   Query,
   Req,
   UseGuards
@@ -21,6 +19,8 @@ import {
   NormalCouponResponse
 } from './dto/output-coupon.dto';
 import { CouponCourseService } from '../coupon_course/couponcourse.service';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from 'src/decorator/role.decorator';
 
 @Controller('coupon')
 export class CouponController {
@@ -29,6 +29,7 @@ export class CouponController {
     private readonly couponCourseService: CouponCourseService
   ) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get('/:id')
   async getCoupon(@Param('id') id: string): Promise<Coupon> {
     const coupon = await this.couponService.getCouponById(parseInt(id));
@@ -36,16 +37,10 @@ export class CouponController {
     else throw new NotFoundException(`Could not find coupon with id: ${id}`);
   }
 
-  @Get('/byCode/:code')
-  async getCouponByCode(@Param('code') code: string): Promise<Coupon> {
-    const coupon = await this.couponService.getCouponByCode(code);
-    if (coupon) return coupon;
-    else throw new NotFoundException(`Could not find coupon by code ${code}`);
-  }
-
   // get all normal coupon
   // NOTICE: THIS CONTROLLER IS SUPPORTED BY COUPONCOURSE SERVICE
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Get('/get/all/normal')
   async getAllCoupons(
     @Query('limit') limit: string,
@@ -71,7 +66,8 @@ export class CouponController {
   }
 
   // get all global coupon
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Get('/get/all/global')
   async getAllGlobalCoupons(
     @Query('limit') limit: string,
@@ -98,7 +94,8 @@ export class CouponController {
     return await this.couponService.isExistingCode(code);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Post()
   async createCoupon(
     @Req() req: ApiRequestData,
@@ -110,27 +107,5 @@ export class CouponController {
       body
     );
     return coupon;
-  }
-
-  @Put('/:id')
-  async updateCoupon(
-    @Param('id') id: string,
-    @Body()
-    body: CreateCouponDto
-  ): Promise<Coupon> {
-    const coupon = await this.couponService.updateCoupon(parseInt(id), body);
-    return coupon;
-  }
-
-  @Delete(`/:id`)
-  async deleteCoupon(@Param(`id`) id: string): Promise<Coupon> {
-    const deletedCoupon = await this.couponService.deleteCoupon(parseInt(id));
-    return deletedCoupon;
-  }
-
-  @Delete(`delete/all`)
-  async deleteAllCoupons(): Promise<string> {
-    const deleted = await this.couponService.deleteAllCoupons();
-    return `Deleted ${deleted.count} coupons`;
   }
 }
