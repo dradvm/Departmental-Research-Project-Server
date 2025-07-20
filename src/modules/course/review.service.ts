@@ -142,4 +142,56 @@ export class ReviewService {
       }
     });
   }
+  async createReview(
+    userId: number,
+    courseId: number,
+    rating: number,
+    review: string
+  ) {
+    return this.prisma.review.create({
+      data: {
+        userId,
+        courseId,
+        rating,
+        review: review.trim() ? review : null
+      }
+    });
+  }
+
+  async updateReview(reviewId: number, rating: number, review: string) {
+    return this.prisma.review.update({
+      where: {
+        reviewId: reviewId
+      },
+      data: {
+        rating,
+        review: review.trim() ? review : null
+      }
+    });
+  }
+  async deleteReview(reviewId: number) {
+    return this.prisma.review.delete({
+      where: {
+        reviewId: reviewId
+      }
+    });
+  }
+  async getReviewByUserIdAndCourseId(userId: number, courseId: number) {
+    return this.prisma.review.findFirst({
+      where: {
+        userId,
+        courseId
+      },
+      include: {
+        User: {
+          select: {
+            name: true,
+            img: true,
+            isActive: true,
+            isDeleted: true
+          }
+        }
+      }
+    });
+  }
 }

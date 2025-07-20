@@ -32,4 +32,14 @@ export class WishlistController {
   ) {
     return this.wishlistService.deleteWishlist(req.user.userId, courseId);
   }
+  @Get('isExistInWishlist/:courseId')
+  async isExistInWishlist(
+    @Req() req: ApiRequestData,
+    @Param('courseId', ParseIntPipe) courseId: number
+  ) {
+    return this.wishlistService.getItemCourseInWishlist(
+      req.user.userId,
+      courseId
+    );
+  }
 }

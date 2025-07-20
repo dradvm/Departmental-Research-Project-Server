@@ -28,6 +28,19 @@ export class CartService {
 
   async addCourseIntoCart(data: CartCreateDto): Promise<Cart> {
     try {
+      try {
+        await this.prisma.wishlist.delete({
+          where: {
+            userId_courseId: {
+              userId: data.userId,
+              courseId: data.courseId
+            }
+          }
+        });
+      } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        if (error.code !== 'P2025') throw error;
+      }
       return this.prisma.cart.create({ data });
     } catch (e) {
       throw new BadRequestException(
@@ -161,5 +174,18 @@ export class CartService {
         `Can not delete all courses from the cart of user ${userId}: ${e}`
       );
     }
+  }
+  getItemCourseInCart(userId: number, courseId: number) {
+    if (!userId) {
+      return null;
+    }
+    return this.prisma.cart.findUnique({
+      where: {
+        userId_courseId: {
+          userId: userId,
+          courseId: courseId
+        }
+      }
+    });
   }
 }

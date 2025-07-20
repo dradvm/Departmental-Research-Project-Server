@@ -58,7 +58,20 @@ export class WishlistService {
       }
     });
   }
-  addWishlist(userId: number, courseId: number) {
+  async addWishlist(userId: number, courseId: number) {
+    try {
+      await this.prisma.cart.delete({
+        where: {
+          userId_courseId: {
+            userId,
+            courseId
+          }
+        }
+      });
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (error.code !== 'P2025') throw error;
+    }
     return this.prisma.wishlist.create({
       data: {
         courseId: courseId,
@@ -72,6 +85,19 @@ export class WishlistService {
         userId_courseId: {
           courseId: courseId,
           userId: userId
+        }
+      }
+    });
+  }
+  getItemCourseInWishlist(userId: number, courseId: number) {
+    if (!userId) {
+      return null;
+    }
+    return this.prisma.wishlist.findUnique({
+      where: {
+        userId_courseId: {
+          userId: userId,
+          courseId: courseId
         }
       }
     });

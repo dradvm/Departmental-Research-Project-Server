@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Query,
   Req,
@@ -18,7 +19,7 @@ import { CartOutputDto } from './dto/output-cart';
 
 @Controller('cart')
 export class CartController {
-  constructor(private readonly cartService: CartService) { }
+  constructor(private readonly cartService: CartService) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -60,5 +61,13 @@ export class CartController {
     @Req() req: ApiRequestData
   ): Promise<{ count: number }> {
     return this.cartService.removeAllCourseOfCart(req.user.userId);
+  }
+
+  @Get('isExistInCart/:courseId')
+  async isExistInCart(
+    @Req() req: ApiRequestData,
+    @Param('courseId', ParseIntPipe) courseId: number
+  ) {
+    return this.cartService.getItemCourseInCart(req.user.userId, courseId);
   }
 }

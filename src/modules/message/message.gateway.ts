@@ -58,6 +58,12 @@ export class MessageGateway
     @MessageBody() data: { userId: number; threadId: number },
     @ConnectedSocket() client: Socket
   ) {
+    for (const room of client.rooms) {
+      if (room !== client.id) {
+        await client.leave(room);
+      }
+    }
+
     await client.join(getRoomId(data.userId, data.threadId));
     this.messageService
       .seenMessage(data.userId, data.threadId)

@@ -16,6 +16,7 @@ import { CartService } from '../cart/cart.service';
 import { PaymentDetailService } from '../payment_detail/paymentdetail.service';
 import { PaymentOutputRespone, PaymentOutputType } from './dto/output-payment';
 import { getFinalPrice } from 'src/helpers/calculate-discount-amount';
+import { MessageService } from '../message/message.service';
 
 @Injectable()
 export class PaymentService {
@@ -24,7 +25,8 @@ export class PaymentService {
     private readonly couponCourseService: CouponCourseService,
     private readonly couponService: CouponService,
     private readonly cartService: CartService,
-    private readonly paymentDetailService: PaymentDetailService
+    private readonly paymentDetailService: PaymentDetailService,
+    private readonly messageService: MessageService
   ) {}
 
   async addOnePayment(
@@ -114,6 +116,12 @@ export class PaymentService {
         }
         // create paymentDetial
         await tx.paymentDetail.create({ data: paymentDetail });
+        await this.messageService.addMessage(
+          course.userId ?? 0,
+          payment.userId,
+          `Chào mừng bạn đến với khóa học "${course.title}". Chúc bạn có trải nghiệm học tập tốt nhất!`,
+          null
+        );
         // delete course from cart
         const deleteItemFormCart: Cart =
           await this.cartService.removeOneCourseFromCart(
