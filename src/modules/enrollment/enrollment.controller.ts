@@ -57,4 +57,11 @@ export class EnrollmentController {
       req.user.userId
     );
   }
+  @Get('is-enrolled/:courseId')
+  isEnrolled(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Req() req: ApiRequestData
+  ) {
+    return this.enrollmentService.isEnrolled(req.user.userId, courseId);
+  }
 }

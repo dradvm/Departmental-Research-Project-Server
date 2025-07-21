@@ -261,4 +261,32 @@ export class EnrollmentService {
       }
     });
   }
+  async isEnrolled(userId: number, courseId: number) {
+    return this.prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId
+        }
+      },
+      select: {
+        Course: {
+          select: {
+            LastLectureStudy: {
+              where: {
+                userId
+              },
+              select: {
+                Lecture: {
+                  select: {
+                    lectureId: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+  }
 }

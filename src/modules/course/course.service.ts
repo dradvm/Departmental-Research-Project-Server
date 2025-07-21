@@ -159,7 +159,9 @@ export class CourseService {
             name: true,
             img: true,
             email: true,
-            biography: true
+            biography: true,
+            isDeleted: true,
+            isActive: true
           }
         },
         CourseCategory: {
@@ -167,7 +169,6 @@ export class CourseService {
             Category: true
           }
         },
-        CourseObjective: true,
         Wishlist: true,
         Review: true,
         _count: {
