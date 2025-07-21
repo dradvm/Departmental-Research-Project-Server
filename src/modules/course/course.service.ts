@@ -141,7 +141,7 @@ export class CourseService {
 
   async findById(courseId: number) {
     const course = await this.prisma.course.findUnique({
-      where: { courseId: courseId, isAccepted: true, isPublic: true },
+      where: { courseId: courseId },
       include: {
         Section: {
           include: {
