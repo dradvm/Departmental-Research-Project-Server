@@ -70,4 +70,8 @@ export class CartController {
   ) {
     return this.cartService.getItemCourseInCart(req.user.userId, courseId);
   }
+  @Get('count')
+  async getCountCart(@Req() req: ApiRequestData) {
+    return this.cartService.getCountCart(req.user.userId);
+  }
 }

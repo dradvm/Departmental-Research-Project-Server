@@ -188,4 +188,11 @@ export class CartService {
       }
     });
   }
+  getCountCart(userId: number) {
+    return this.prisma.cart.count({
+      where: {
+        userId: userId
+      }
+    });
+  }
 }

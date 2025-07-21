@@ -15,7 +15,10 @@ export class MessageController {
   getThread(@Param('otherUserId', ParseIntPipe) otherUserId: number) {
     return this.messageService.getThread(otherUserId);
   }
-
+  @Get('count-not-seen')
+  getCountNotSeenMessage(@Req() req: ApiRequestData) {
+    return this.messageService.getCountNotSeenMessage(req.user.userId);
+  }
   @Get('/:otherUserId')
   getMessages(
     @Req() req: ApiRequestData,

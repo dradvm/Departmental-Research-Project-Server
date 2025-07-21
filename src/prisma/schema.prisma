@@ -92,6 +92,8 @@ model Course {
   requirement      String?            @db.Text
   targetAudience   String?            @db.Text
   videoUrl         String?            @db.VarChar(500)
+  createdAt        DateTime           @default(now()) @db.DateTime(0)
+  updatedAt        DateTime           @default(now()) @db.DateTime(0)
   Cart             Cart[]
   Certificate      Certificate?
   CouponCourse     CouponCourse[]
