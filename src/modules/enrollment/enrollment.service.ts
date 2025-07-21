@@ -221,8 +221,12 @@ export class EnrollmentService {
                   select: {
                     lectureId: true,
                     nameLecture: true
-                  }
+                  },
+                  orderBy: { order: 'asc' }
                 }
+              },
+              orderBy: {
+                order: 'asc'
               }
             },
             LastLectureStudy: {
@@ -232,7 +236,11 @@ export class EnrollmentService {
               select: {
                 Lecture: {
                   include: {
-                    StudyProgress: true
+                    StudyProgress: {
+                      where: {
+                        userId: userId
+                      }
+                    }
                   }
                 }
               }
@@ -242,6 +250,14 @@ export class EnrollmentService {
       },
       orderBy: {
         lastAccessedAt: 'desc'
+      }
+    });
+  }
+  async addCourseEnroll(userId: number, courseId: number) {
+    return this.prisma.enrollment.create({
+      data: {
+        userId,
+        courseId
       }
     });
   }

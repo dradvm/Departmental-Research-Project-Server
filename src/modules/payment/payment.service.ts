@@ -17,6 +17,8 @@ import { PaymentDetailService } from '../payment_detail/paymentdetail.service';
 import { PaymentOutputRespone, PaymentOutputType } from './dto/output-payment';
 import { getFinalPrice } from 'src/helpers/calculate-discount-amount';
 import { MessageService } from '../message/message.service';
+import { EnrollmentService } from '../enrollment/enrollment.service';
+import { StudyProgressService } from '../study-progress/study-progress.service';
 
 @Injectable()
 export class PaymentService {
@@ -26,7 +28,9 @@ export class PaymentService {
     private readonly couponService: CouponService,
     private readonly cartService: CartService,
     private readonly paymentDetailService: PaymentDetailService,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly enrollmentService: EnrollmentService,
+    private readonly studyProgressService: StudyProgressService
   ) {}
 
   async addOnePayment(
@@ -116,6 +120,19 @@ export class PaymentService {
         }
         // create paymentDetial
         await tx.paymentDetail.create({ data: paymentDetail });
+        await this.enrollmentService.addCourseEnroll(
+          payment.userId,
+          course.courseId
+        );
+        await this.studyProgressService.addAllStudyProgressUser(
+          payment.userId,
+          course.courseId
+        );
+        await this.studyProgressService.addLastLectureStudyInit(
+          payment.userId,
+          course.courseId
+        );
+
         await this.messageService.addMessage(
           course.userId ?? 0,
           payment.userId,

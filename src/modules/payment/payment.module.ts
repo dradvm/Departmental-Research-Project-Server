@@ -9,6 +9,8 @@ import { CartModule } from '../cart/cart.module';
 import { StripeModule } from '../stripe/stripe.module';
 import { WebhookController } from './webhook.controller';
 import { MessageModule } from '../message/message.module';
+import { StudyProgressModule } from '../study-progress/study-progress.module';
+import { EnrollmentModule } from '../enrollment/enrollment.module';
 
 @Module({
   imports: [
@@ -18,7 +20,9 @@ import { MessageModule } from '../message/message.module';
     CouponModule,
     forwardRef(() => CartModule),
     StripeModule.forRootAsync(),
-    MessageModule
+    MessageModule,
+    StudyProgressModule,
+    EnrollmentModule
   ],
   controllers: [PaymentController, WebhookController],
   providers: [PaymentService],

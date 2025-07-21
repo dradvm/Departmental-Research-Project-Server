@@ -20,13 +20,128 @@ export class CourseService {
     private couponService: CouponService
   ) {}
 
-  async findAll(): Promise<Course[]> {
-    return this.prisma.course.findMany();
+  async findAll(
+    search?: string,
+    rating?: number,
+    categoryId?: number,
+    priceRange?: [number, number],
+    durationRange?: [number, number],
+    userId?: number
+  ) {
+    const courses = await this.prisma.course.findMany({
+      where: {
+        isAccepted: true,
+        isPublic: true,
+        ...(userId && {
+          Enrollment: {
+            none: {
+              userId: userId
+            }
+          }
+        }),
+        ...(search &&
+          search.trim().length > 0 && {
+            OR: Array.from(new Set(search.trim().split(' '))).map((word) => ({
+              title: {
+                contains: word,
+                not: null
+              }
+            }))
+          }),
+        ...(categoryId && {
+          CourseCategory: {
+            some: {
+              categoryId: categoryId
+            }
+          }
+        }),
+        ...(rating && {
+          Review: {
+            some: {
+              rating: {
+                gte: rating
+              }
+            }
+          }
+        }),
+        ...(userId && {
+          Enrollment: {
+            none: {
+              userId: userId
+            }
+          }
+        })
+      },
+      include: {
+        Section: {
+          include: {
+            Lecture: {
+              orderBy: { order: 'asc' }
+            }
+          },
+          orderBy: {
+            order: 'asc'
+          }
+        },
+        User: {
+          select: {
+            userId: true,
+            name: true
+          }
+        },
+        CourseCategory: {
+          include: {
+            Category: true
+          }
+        },
+        CourseObjective: true,
+        Wishlist: true,
+        Review: true,
+        _count: {
+          select: {
+            Enrollment: true,
+            Review: true
+          }
+        }
+      },
+      orderBy: {
+        updatedAt: 'desc'
+      }
+    });
+    // Tính giá và thời lượng để lọc sau khi fetch
+    const coursesReturn = await Promise.all(
+      courses.map(async (course) => {
+        const { finalPrice } = await this.getCoursePrice(course.courseId); // price: number
+        return {
+          ...course,
+          finalPrice
+        };
+      })
+    );
+
+    const filtered = coursesReturn.filter((course) => {
+      const totalDuration = course.Section.reduce(
+        (total, section) =>
+          total +
+          section.Lecture.reduce((total2, lecture) => total2 + lecture.time, 0),
+        0
+      );
+      const matchPrice =
+        !priceRange ||
+        (Number(course.price) >= priceRange[0] &&
+          Number(course.price) <= priceRange[1]);
+      const matchDuration =
+        !durationRange ||
+        (totalDuration >= durationRange[0] * 60 * 60 &&
+          totalDuration <= durationRange[1] * 60 * 60);
+      return matchPrice && matchDuration;
+    });
+    return filtered;
   }
 
-  async findById(courseId: number): Promise<Course | null> {
-    return this.prisma.course.findUnique({
-      where: { courseId: courseId },
+  async findById(courseId: number) {
+    const course = await this.prisma.course.findUnique({
+      where: { courseId: courseId, isAccepted: true, isPublic: true },
       include: {
         Section: {
           include: {
@@ -63,6 +178,16 @@ export class CourseService {
         }
       }
     });
+    if (course) {
+      const { finalPrice } = await this.getCoursePrice(course?.courseId);
+
+      const courseReturn = {
+        ...course,
+        finalPrice
+      };
+      return courseReturn;
+    }
+    return null;
   }
 
   async createCourseWithContent(
@@ -86,8 +211,8 @@ export class CourseService {
 
         CourseCategory: {
           create: dto.categoryIds.map((categoryId) => ({
-            categoryId,
-          })),
+            categoryId
+          }))
         },
 
         Section: {
@@ -124,14 +249,14 @@ export class CourseService {
       },
       include: {
         Section: {
-          include: { Lecture: true },
+          include: { Lecture: true }
         },
         CourseCategory: {
           include: {
-            Category: true,
-          },
-        },
-      },
+            Category: true
+          }
+        }
+      }
     });
   }
 
@@ -182,16 +307,16 @@ export class CourseService {
     if (dto.categoryIds && dto.categoryIds.length > 0) {
       // Xóa tất cả Category cũ của course
       await this.prisma.courseCategory.deleteMany({
-        where: { courseId },
+        where: { courseId }
       });
 
       // Gắn lại Category mới
       await this.prisma.courseCategory.createMany({
         data: dto.categoryIds.map((categoryId) => ({
           courseId,
-          categoryId,
+          categoryId
         })),
-        skipDuplicates: true,
+        skipDuplicates: true
       });
     }
 
@@ -355,14 +480,23 @@ export class CourseService {
     return result;
   }
 
-  getCoursesByCategory(categoryId: number) {
-    return this.prisma.course.findMany({
+  async getCoursesByCategory(categoryId: number, userId?: number) {
+    const courses = await this.prisma.course.findMany({
       where: {
+        isAccepted: true,
+        isPublic: true,
         CourseCategory: {
           some: {
             categoryId: categoryId
           }
-        }
+        },
+        ...(userId && {
+          Enrollment: {
+            none: {
+              userId: userId
+            }
+          }
+        })
       },
       include: {
         Section: {
@@ -395,8 +529,22 @@ export class CourseService {
             Review: true
           }
         }
+      },
+      orderBy: {
+        updatedAt: 'desc'
       }
     });
+    const coursesReturn = await Promise.all(
+      courses.map(async (course) => {
+        const priceInfo = await this.getCoursePrice(course.courseId);
+        return {
+          ...course,
+          ...priceInfo
+        };
+      })
+    );
+
+    return coursesReturn;
   }
   async getFilteredCoursesWithPagination(
     limit: number,
@@ -655,5 +803,71 @@ export class CourseService {
         `Không lấy được giá của khoá học ${courseId}: ${error}`
       );
     }
+  }
+  async getOtherCoursesByUser(
+    instructorId: number,
+    courseId: number,
+    userId?: number
+  ) {
+    const courses = await this.prisma.course.findMany({
+      where: {
+        isAccepted: true,
+        isPublic: true,
+        userId: instructorId,
+        courseId: {
+          not: courseId
+        },
+        ...(userId && {
+          Enrollment: {
+            none: {
+              userId: userId
+            }
+          }
+        })
+      },
+      include: {
+        Section: {
+          include: {
+            Lecture: {
+              orderBy: { order: 'asc' }
+            }
+          },
+          orderBy: {
+            order: 'asc'
+          }
+        },
+        User: {
+          select: {
+            userId: true,
+            name: true
+          }
+        },
+        CourseCategory: {
+          include: {
+            Category: true
+          }
+        },
+        CourseObjective: true,
+        Wishlist: true,
+        Review: true,
+        _count: {
+          select: {
+            Enrollment: true,
+            Review: true
+          }
+        }
+      },
+      orderBy: { updatedAt: 'desc' }
+    });
+    const coursesReturn = await Promise.all(
+      courses.map(async (course) => {
+        const priceInfo = await this.getCoursePrice(course.courseId);
+        return {
+          ...course,
+          ...priceInfo
+        };
+      })
+    );
+    return coursesReturn;
   }
 }

@@ -78,6 +78,72 @@ export class CourseController {
     );
   }
 
+  @Get('search/public')
+  @Public()
+  async findAllPublic(
+    @Query()
+    query: {
+      search?: string;
+      rating?: number;
+      categoryId?: number;
+      priceMin?: number;
+      priceMax?: number;
+      durationMin?: number;
+      durationMax?: number;
+    }
+  ) {
+    const {
+      search,
+      rating,
+      categoryId,
+      priceMin,
+      priceMax,
+      durationMin,
+      durationMax
+    } = query;
+
+    return this.courseService.findAll(
+      search,
+      rating ? +rating : undefined,
+      categoryId ? +categoryId : undefined,
+      priceMin && priceMax ? [+priceMin, +priceMax] : undefined,
+      durationMin && durationMax ? [+durationMin, +durationMax] : undefined
+    );
+  }
+  @Get('search/private')
+  async findAllPrivate(
+    @Query()
+    query: {
+      userId?: number;
+      search?: string;
+      rating?: number;
+      categoryId?: number;
+      priceMin?: number;
+      priceMax?: number;
+      durationMin?: number;
+      durationMax?: number;
+    },
+    @Req() req: ApiRequestData
+  ) {
+    const {
+      search,
+      rating,
+      categoryId,
+      priceMin,
+      priceMax,
+      durationMin,
+      durationMax
+    } = query;
+
+    return this.courseService.findAll(
+      search,
+      rating ? +rating : undefined,
+      categoryId ? +categoryId : undefined,
+      priceMin && priceMax ? [+priceMin, +priceMax] : undefined,
+      durationMin && durationMax ? [+durationMin, +durationMax] : undefined,
+      req.user.userId
+    );
+  }
   // accpet: isAccept: true
   @Put('/accept/:id')
   async acceptCourse(@Param('id') id: string) {
@@ -89,6 +155,7 @@ export class CourseController {
     return this.courseService.acceptCourse(courseId);
   }
   @Get('/:courseId')
+  @Public()
   getCourseById(@Param('courseId', ParseIntPipe) courseId: number) {
     return this.courseService.findById(courseId);
   }
@@ -119,6 +186,7 @@ export class CourseController {
   }
 
   @Get('/:courseId/price')
+  @Public()
   getCoursePrice(@Param('courseId', ParseIntPipe) courseId: number) {
     return this.courseService.getCoursePrice(courseId);
   }
@@ -192,7 +260,8 @@ export class CourseController {
     @Body('isPublic') isPublic: string,
     @Body('sections') sectionsRaw: string,
     @Body('categoryIds') categoryIdsRaw: string, //
-    @UploadedFiles() files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] },
+    @UploadedFiles()
+    files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] }
   ) {
     let sections;
     let categoryIds: number[];
@@ -210,7 +279,6 @@ export class CourseController {
       throw new BadRequestException('Invalid JSON in categoryIds');
     }
 
-
     const dto: CreateCourseDto = {
       userId,
       title,
@@ -221,7 +289,7 @@ export class CourseController {
       price: parseFloat(price),
       isPublic: isPublic === 'true',
       sections,
-      categoryIds,
+      categoryIds
     };
 
     // Upload thumbnail nếu có
@@ -259,7 +327,8 @@ export class CourseController {
     @Body('isPublic') isPublic: string,
     @Body('sections') sectionsRaw: string,
     @Body('categoryIds') categoryIdsRaw: string, //
-    @UploadedFiles() files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] },
+    @UploadedFiles()
+    files: { videos?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] }
   ) {
     let sections;
     let categoryIds: number[] = [];
@@ -286,7 +355,7 @@ export class CourseController {
       price: parseFloat(price),
       isPublic: isPublic === 'true',
       sections,
-      categoryIds, //
+      categoryIds //
     };
 
     let thumbnailUrl: string | undefined;
@@ -315,9 +384,38 @@ export class CourseController {
     return this.courseService.getRevenueByUser(userId);
   }
 
-  @Get('category/:categoryId')
+  @Get('category/:categoryId/public')
   @Public()
-  getCoursesByCategory(@Param('categoryId', ParseIntPipe) categoryId: number) {
+  getCoursesByCategoryPublic(
+    @Param('categoryId', ParseIntPipe) categoryId: number
+  ) {
     return this.courseService.getCoursesByCategory(categoryId);
+  }
+  @Get('category/:categoryId/private')
+  getCoursesByCategoryPrivate(
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+    @Req() req: ApiRequestData
+  ) {
+    return this.courseService.getCoursesByCategory(categoryId, req.user.userId);
+  }
+  @Get('other-courses/:courseId/public')
+  @Public()
+  getOtherCoursesByUserPublic(
+    @Query('userId', ParseIntPipe) userId: number,
+    @Param('courseId', ParseIntPipe) courseId: number
+  ) {
+    return this.courseService.getOtherCoursesByUser(userId, courseId);
+  }
+  @Get('other-courses/:courseId/private')
+  getOtherCoursesByUserPrivate(
+    @Query('userId', ParseIntPipe) userId: number,
+    @Req() req: ApiRequestData,
+    @Param('courseId', ParseIntPipe) courseId: number
+  ) {
+    return this.courseService.getOtherCoursesByUser(
+      userId,
+      courseId,
+      req.user.userId
+    );
   }
 }

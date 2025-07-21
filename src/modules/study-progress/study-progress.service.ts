@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { LastLectureStudy } from '@prisma/client';
+import { LastLectureStudy, Lecture } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -117,5 +117,49 @@ export class StudyProgressService {
         lectureId: lectureId
       }
     });
+  }
+
+  async addAllStudyProgressUser(userId: number, courseId: number) {
+    const lectures = await this.prisma.lecture.findMany({
+      where: {
+        Section: {
+          courseId: courseId
+        }
+      },
+      include: {
+        Section: true
+      }
+    });
+    const data = lectures.map((lecture: Lecture) => ({
+      userId: userId,
+      lectureId: lecture.lectureId
+    }));
+
+    return this.prisma.studyProgress.createMany({
+      data: data
+    });
+  }
+  async addLastLectureStudyInit(userId: number, courseId: number) {
+    const firstLecture =
+      (
+        await this.prisma.section.findFirst({
+          where: { courseId },
+          orderBy: { order: 'asc' },
+          select: {
+            Lecture: {
+              orderBy: { order: 'asc' },
+              take: 1
+            }
+          }
+        })
+      )?.Lecture[0] || null;
+    if (!firstLecture) {
+      return;
+    }
+    return this.trackLastLectureStudy(
+      courseId,
+      userId,
+      firstLecture?.lectureId
+    );
   }
 }

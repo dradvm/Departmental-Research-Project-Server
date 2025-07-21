@@ -114,4 +114,12 @@ export class MessageService {
       }
     });
   }
+  getCountNotSeenMessage(userId: number) {
+    return this.prisma.message.count({
+      where: {
+        userReceiverId: userId,
+        seenAt: null
+      }
+    });
+  }
 }

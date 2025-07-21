@@ -102,4 +102,11 @@ export class WishlistService {
       }
     });
   }
+  getCountWishlist(userId: number) {
+    return this.prisma.wishlist.count({
+      where: {
+        userId: userId
+      }
+    });
+  }
 }

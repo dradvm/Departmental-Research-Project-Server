@@ -42,4 +42,8 @@ export class WishlistController {
       courseId
     );
   }
+  @Get('count')
+  getCountWishlist(@Req() req: ApiRequestData) {
+    return this.wishlistService.getCountWishlist(req.user.userId);
+  }
 }
