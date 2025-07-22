@@ -4,24 +4,23 @@ FROM node:18
 # Tạo thư mục làm việc
 WORKDIR /app
 
-# Copy package.json và package-lock.json trước để tối ưu cache
+# Copy các file cần thiết để cài trước dependencies (tối ưu cache)
 COPY package*.json ./
 
-# Cài đặt các phụ thuộc
+# Cài đặt dependencies
 RUN npm install
 
-# Copy toàn bộ project vào image
+# Copy toàn bộ mã nguồn
 COPY . .
 
-# Generate Prisma client
-RUN npm run prisma:pull
+# Tạo Prisma Client (cần có trước khi build)
 RUN npm run prisma:generate
 
-# Nếu cần biến môi trường
+# Build NestJS
+RUN npm run build
+
+# Mở port cho Render (Render sẽ tự set biến môi trường PORT)
 ENV PORT=3001
 
-# Mở cổng 3001 (giúp render hiểu container này dùng port gì)
-EXPOSE 3001
-
-# Lệnh chạy ứng dụng
-CMD ["node", "dist/main.js"]
+# Command khi container khởi chạy
+CMD ["npm", "run", "start:prod"]
