@@ -34,14 +34,14 @@ export class PaymentDetailService {
     const data = await this.prisma.paymentDetail.groupBy({
       by: ['courseId'],
       _count: {
-        couponId: true
+        courseId: true
       },
       _sum: {
         final_price: true
       },
       orderBy: {
         _count: {
-          couponId: 'desc'
+          courseId: 'desc'
         }
       }
     });
@@ -55,7 +55,7 @@ export class PaymentDetailService {
       });
       result.push({
         title: courseInfor ? courseInfor.title : 'Không xác định',
-        count: data[i]._count.couponId,
+        count: data[i]._count.courseId,
         revenue: Number(data[i]._sum.final_price)
       });
     }

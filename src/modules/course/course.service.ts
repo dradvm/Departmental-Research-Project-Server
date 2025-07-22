@@ -625,6 +625,7 @@ export class CourseService {
     LEFT JOIN \`Section\` s ON s.\`courseId\` = c.\`courseId\`
     LEFT JOIN \`Lecture\` l ON l.\`sectionId\` = s.\`sectionId\`
     LEFT JOIN \`User\` u ON u.\`userId\` = c.\`userId\`
+    WHERE c.\`isAccepted\` = false
     GROUP BY
       c.\`courseId\`,
       c.\`title\`,
@@ -718,7 +719,7 @@ export class CourseService {
     }
 
     // result
-    const formattedData = data.map((row) => ({
+    const formatedData = data.map((row) => ({
       courseId: row.courseId,
       title: row.title,
       subTitle: row.sub_title,
@@ -740,7 +741,7 @@ export class CourseService {
     }));
 
     return {
-      courses: formattedData,
+      courses: formatedData,
       length: total
     };
   }
