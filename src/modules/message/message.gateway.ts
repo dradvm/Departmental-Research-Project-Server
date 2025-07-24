@@ -19,7 +19,7 @@ function getRoomId(userA: string | number, userB: string | number): string {
 
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:3000',
+    origin: process.env.ORIGIN,
     credentials: true
   }
 })
