@@ -665,6 +665,7 @@ export class CourseService {
     LEFT JOIN \`Section\` s ON s.\`courseId\` = c.\`courseId\`
     LEFT JOIN \`Lecture\` l ON l.\`sectionId\` = s.\`sectionId\`
     LEFT JOIN \`User\` u ON u.\`userId\` = c.\`userId\`
+    WHERE c.\`isAccepted\` = false
     GROUP BY c.\`courseId\`, u.\`name\`, c.\`title\`
   )
   SELECT COUNT(*) AS count
