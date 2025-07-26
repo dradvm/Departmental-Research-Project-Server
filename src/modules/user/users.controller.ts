@@ -158,4 +158,10 @@ export class UsersController {
     }
     return await this.usersService.enableUserAccount(userId);
   }
+
+  @Get('user-profile/:userId')
+  @Public()
+  getUserProfile(@Param('userId', ParseIntPipe) userId: number) {
+    return this.usersService.getUserProfile(userId);
+  }
 }
