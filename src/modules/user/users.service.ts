@@ -32,7 +32,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailerService: MailerService
-  ) { }
+  ) {}
 
   isEmailExist = async (email: string) => {
     const user = await this.prisma.user.findUnique({ where: { email } });
@@ -132,9 +132,9 @@ export class UsersService {
         name: data.name,
         biography: data.biography,
         ...(data.img && { img: data.img }),
-        ...(data.imgPublicId && { imgPublicId: data.imgPublicId }),
-      },
-    })
+        ...(data.imgPublicId && { imgPublicId: data.imgPublicId })
+      }
+    });
   }
 
   async create(createUserDto: CreateUserDto) {
@@ -205,10 +205,10 @@ export class UsersService {
       // isDeleted: false,
       ...(searchText
         ? {
-          name: {
-            contains: searchText.toLowerCase()
+            name: {
+              contains: searchText.toLowerCase()
+            }
           }
-        }
         : {})
     };
     const result = await this.prisma.user.findMany({
@@ -561,11 +561,11 @@ export class UsersService {
 
     user = await this.prisma.user.findFirst({
       where: {
-        codeId: data.code,
-      },
+        codeId: data.code
+      }
     });
     if (!user) {
-      throw new BadRequestException("Mã code không hợp lệ hoặc đã hết hạn")
+      throw new BadRequestException('Mã code không hợp lệ hoặc đã hết hạn');
     }
 
     //check expire code
@@ -587,7 +587,7 @@ export class UsersService {
 
   async updateUserRole(userId: number, role: string) {
     const user = await this.prisma.user.findUnique({
-      where: { userId: userId },
+      where: { userId: userId }
     });
 
     if (!user) {
@@ -596,7 +596,43 @@ export class UsersService {
 
     return this.prisma.user.update({
       where: { userId: userId },
-      data: { role },
+      data: { role }
+    });
+  }
+
+  async getUserProfile(userId: number) {
+    return this.prisma.user.findUnique({
+      where: {
+        userId: userId,
+        role: {
+          not: 'ADMIN'
+        },
+        isActive: true,
+        isDeleted: false
+      },
+      select: {
+        name: true,
+        biography: true,
+        role: true,
+        email: true,
+        img: true,
+        Course: {
+          include: {
+            CourseCategory: {
+              include: {
+                Category: true
+              }
+            },
+            Review: true,
+            _count: {
+              select: {
+                Enrollment: true,
+                Review: true
+              }
+            }
+          }
+        }
+      }
     });
   }
 }

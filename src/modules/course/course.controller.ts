@@ -53,6 +53,7 @@ export class CourseController {
   getCategories() {
     return this.categoryService.getAll();
   }
+
   @Get()
   async getAllCourses(
     @Query('limit') limit: string,
@@ -77,7 +78,6 @@ export class CourseController {
       searchText !== undefined ? searchText : undefined
     );
   }
-
   @Get('search/public')
   @Public()
   async findAllPublic(
