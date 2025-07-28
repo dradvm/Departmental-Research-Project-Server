@@ -38,13 +38,6 @@ model Category {
   CourseCategory CourseCategory[]
 }
 
-model Certificate {
-  courseId        Int               @id
-  certificate     String?           @db.Text
-  Course          Course            @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Certificate_Course")
-  UserCertificate UserCertificate[]
-}
-
 model Coupon {
   couponId         Int             @id @default(autoincrement())
   type             String          @db.VarChar(100)
@@ -62,7 +55,6 @@ model Coupon {
   CouponCourse     CouponCourse[]
   Payment          Payment[]
   PaymentDetail    PaymentDetail[]
-  UserCoupon       UserCoupon[]
 
   @@index([userId], map: "fk_Coupon_User")
 }
@@ -91,11 +83,9 @@ model Course {
   thumbnail        String?            @db.Text
   requirement      String?            @db.Text
   targetAudience   String?            @db.Text
-  videoUrl         String?            @db.VarChar(500)
   createdAt        DateTime           @default(now()) @db.DateTime(0)
   updatedAt        DateTime           @default(now()) @db.DateTime(0)
   Cart             Cart[]
-  Certificate      Certificate?
   CouponCourse     CouponCourse[]
   User             User?              @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Course_User")
   CourseCategory   CourseCategory[]
@@ -144,16 +134,6 @@ model Enrollment {
   @@index([courseId], map: "fk_Enrollment_Course")
 }
 
-model Follow {
-  followerId                    Int
-  followingId                   Int
-  User_Follow_followerIdToUser  User @relation("Follow_followerIdToUser", fields: [followerId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Follow_Follower")
-  User_Follow_followingIdToUser User @relation("Follow_followingIdToUser", fields: [followingId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Follow_Following")
-
-  @@id([followerId, followingId])
-  @@index([followingId], map: "fk_Follow_Following")
-}
-
 model Lecture {
   lectureId        Int                @id @default(autoincrement())
   sectionId        Int?
@@ -197,27 +177,6 @@ model Note {
 
   @@index([lectureId], map: "fk_Note_Lecture")
   @@index([userId], map: "fk_Note_User")
-}
-
-model Notification {
-  notificationId       Int                    @id @default(autoincrement())
-  contentNotification  String?                @db.Text
-  userId               Int?
-  User                 User?                  @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Notification_User")
-  NotificationReceiver NotificationReceiver[]
-
-  @@index([userId], map: "fk_Notification_User")
-}
-
-model NotificationReceiver {
-  notificationId      Int
-  userId              Int
-  timeGetNotification DateTime?    @db.DateTime(0)
-  Notification        Notification @relation(fields: [notificationId], references: [notificationId], onDelete: NoAction, onUpdate: NoAction, map: "fk_NotificationReceiver_Notification")
-  User                User         @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_NotificationReceiver_User")
-
-  @@id([notificationId, userId])
-  @@index([userId], map: "fk_NotificationReceiver_User")
 }
 
 model Payment {
@@ -266,15 +225,6 @@ model Question {
   @@index([userId], map: "fk_Question_User")
 }
 
-model Report {
-  reportId      Int     @id @default(autoincrement())
-  userId        Int?
-  contentReport String? @db.Text
-  User          User?   @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Report_User")
-
-  @@index([userId], map: "fk_Report_User")
-}
-
 model Review {
   reviewId  Int       @id @default(autoincrement())
   userId    Int?
@@ -319,63 +269,36 @@ model StudyRemind {
 }
 
 model User {
-  userId                               Int                    @id @default(autoincrement())
-  name                                 String?                @db.VarChar(255)
-  biography                            String?                @db.Text
-  role                                 String?                @default("USERS") @db.VarChar(100)
-  gender                               String?                @db.VarChar(10)
-  codeExpired                          DateTime?              @db.DateTime(0)
-  codeId                               String?                @db.VarChar(255)
-  email                                String?                @unique(map: "email") @db.VarChar(255)
-  password                             String?                @db.VarChar(255)
-  img                                  String?                @db.Text
-  isActive                             Boolean?               @default(false)
-  createdAt                            DateTime               @default(now()) @db.DateTime(0)
-  updatedAt                            DateTime               @default(now()) @db.DateTime(0)
-  isDeleted                            Boolean?               @default(false)
-  imgPublicId                          String?                @db.VarChar(255)
+  userId                               Int                @id @default(autoincrement())
+  name                                 String?            @db.VarChar(255)
+  biography                            String?            @db.Text
+  role                                 String?            @default("USERS") @db.VarChar(100)
+  gender                               String?            @db.VarChar(10)
+  codeExpired                          DateTime?          @db.DateTime(0)
+  codeId                               String?            @db.VarChar(255)
+  email                                String?            @unique(map: "email") @db.VarChar(255)
+  password                             String?            @db.VarChar(255)
+  img                                  String?            @db.Text
+  isActive                             Boolean?           @default(false)
+  createdAt                            DateTime           @default(now()) @db.DateTime(0)
+  updatedAt                            DateTime           @default(now()) @db.DateTime(0)
+  isDeleted                            Boolean?           @default(false)
+  imgPublicId                          String?            @db.VarChar(255)
   Answer                               Answer[]
   Cart                                 Cart[]
   Coupon                               Coupon[]
   Course                               Course[]
   Enrollment                           Enrollment[]
-  Follow_Follow_followerIdToUser       Follow[]               @relation("Follow_followerIdToUser")
-  Follow_Follow_followingIdToUser      Follow[]               @relation("Follow_followingIdToUser")
   LastLectureStudy                     LastLectureStudy[]
-  Message_Message_userReceiverIdToUser Message[]              @relation("Message_userReceiverIdToUser")
-  Message_Message_userSenderIdToUser   Message[]              @relation("Message_userSenderIdToUser")
+  Message_Message_userReceiverIdToUser Message[]          @relation("Message_userReceiverIdToUser")
+  Message_Message_userSenderIdToUser   Message[]          @relation("Message_userSenderIdToUser")
   Note                                 Note[]
-  Notification                         Notification[]
-  NotificationReceiver                 NotificationReceiver[]
   Payment                              Payment[]
   Question                             Question[]
-  Report                               Report[]
   Review                               Review[]
   StudyProgress                        StudyProgress[]
   StudyRemind                          StudyRemind[]
-  UserCertificate                      UserCertificate[]
-  UserCoupon                           UserCoupon[]
   Wishlist                             Wishlist[]
-}
-
-model UserCertificate {
-  courseId    Int
-  userId      Int
-  Certificate Certificate @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCertificate_Certificate")
-  User        User        @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCertificate_User")
-
-  @@id([courseId, userId])
-  @@index([userId], map: "fk_UserCertificate_User")
-}
-
-model UserCoupon {
-  userId   Int
-  couponId Int
-  Coupon   Coupon @relation(fields: [couponId], references: [couponId], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCoupon_Coupon")
-  User     User   @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_UserCoupon_User")
-
-  @@id([userId, couponId])
-  @@index([couponId], map: "fk_UserCoupon_Coupon")
 }
 
 model Wishlist {
