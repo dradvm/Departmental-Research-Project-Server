@@ -94,7 +94,6 @@ export class CourseService {
             Category: true
           }
         },
-        CourseObjective: true,
         Wishlist: true,
         Review: true,
         _count: {
@@ -521,7 +520,6 @@ export class CourseService {
             Category: true
           }
         },
-        CourseObjective: true,
         Wishlist: true,
         Review: true,
         _count: {
@@ -850,7 +848,6 @@ export class CourseService {
             Category: true
           }
         },
-        CourseObjective: true,
         Wishlist: true,
         Review: true,
         _count: {

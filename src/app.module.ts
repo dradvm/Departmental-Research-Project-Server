@@ -16,7 +16,6 @@ import { PaymentDetailModule } from './modules/payment_detail/paymentdetail.modu
 import { CartModule } from './modules/cart/cart.module';
 import { CouponModule } from './modules/coupon/coupon.module';
 import { CouponCourseModule } from './modules/coupon_course/couponcourse.module';
-import { UserCouponModule } from './modules/user_coupon/usecoupon.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/passport/jwt-auth.guard';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
@@ -50,7 +49,6 @@ import { StudyRemindModule } from './modules/study-remind/study-remind.module';
     CartModule,
     CouponModule,
     CouponCourseModule,
-    UserCouponModule,
     OverviewModule,
     CloudinaryModule,
     StudyProgressModule,
@@ -121,4 +119,4 @@ import { StudyRemindModule } from './modules/study-remind/study-remind.module';
     // },
   ]
 })
-export class AppModule { }
+export class AppModule {}
