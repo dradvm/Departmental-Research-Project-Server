@@ -89,7 +89,6 @@ model Course {
   CouponCourse     CouponCourse[]
   User             User?              @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Course_User")
   CourseCategory   CourseCategory[]
-  CourseObjective  CourseObjective[]
   Enrollment       Enrollment[]
   LastLectureStudy LastLectureStudy[]
   PaymentDetail    PaymentDetail[]
@@ -110,21 +109,9 @@ model CourseCategory {
   @@index([categoryId], map: "fk_CourseCategory_Category")
 }
 
-model CourseObjective {
-  courseId          Int
-  courseObjectiveId Int
-  content           String? @db.Text
-  Course            Course  @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_CourseObjective_Course")
-
-  @@id([courseId, courseObjectiveId])
-}
-
 model Enrollment {
   userId         Int
   courseId       Int
-  dateRegister   DateTime? @db.Date
-  finishStatus   Boolean?
-  progress       Decimal?  @db.Decimal(5, 2)
   enrolledAt     DateTime? @default(now()) @db.DateTime(0)
   lastAccessedAt DateTime? @db.DateTime(0)
   Course         Course    @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction, map: "fk_Enrollment_Course")
