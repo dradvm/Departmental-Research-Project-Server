@@ -591,7 +591,6 @@ export class CourseService {
         thumbnail: string | null;
         requirement: string | null;
         target_audience: string | null;
-        video_url: string | null;
         total_time: number;
         lecture_count: number;
         instructor_id: number | null;
@@ -612,7 +611,6 @@ export class CourseService {
       c.\`thumbnail\`,
       c.\`requirement\`,
       c.\`targetAudience\` AS target_audience,
-      c.\`videoUrl\` AS video_url,
       u.\`userId\` AS instructor_id,
       u.\`name\` AS instructor_name,
       u.\`email\` AS instructor_email,
@@ -635,7 +633,6 @@ export class CourseService {
       c.\`thumbnail\`,
       c.\`requirement\`,
       c.\`targetAudience\`,
-      c.\`videoUrl\`,
       u.\`userId\`,
       u.\`name\`,
       u.\`email\`,
@@ -729,7 +726,6 @@ export class CourseService {
       thumbnail: row.thumbnail,
       requirement: row.requirement,
       targetAudience: row.target_audience,
-      videoUrl: row.video_url,
       totalTime: Number(row.total_time),
       lectureCount: Number(row.lecture_count),
       teacherId: row.instructor_id,
